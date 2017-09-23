@@ -1,0 +1,46 @@
+<!-- These tests are aimed to check the map_to_malt_indeces() function of -->
+<!-- head_searcher.py. The examples here are selected to test malt mapping algorithm.-->
+<!-- Tests 6-7, 8-9, 11-12 are one sentence that was splitted by SENNA in two parts,-->
+<!-- map_to_malt_indeces must understand where is the first part and where is the-->
+<!-- second and provide correct results. Don't change the order of these tests.-->
+<!-- <result> is taken from "remapped = map_to_malt_indexes(lem_sent, malt_data)"-->
+<!--1-->
+<test>
+<malt>
+pay vvg 1 6 sbj
+more rbr 2 3 pmod
+for in 3 1 adv
+new jj 4 5 nmod
+car nns 5 3 pmod
+be vbz 6 0 root
+n't rb 7 6 vmod
+the dt 8 11 nmod
+most rbs 9 10 amod
+ideal jj 10 11 nmod
+scenario nn 11 6 prd
+, , 12 6 p
+but cc 13 6 cc
+at in 14 26 adv
+a dt 15 20 nmod
+less-than-full-retail-price jj 16 20 nmod
+$ $ 17 20 nmod
+@card@ cd 18 17 amod
+price nn 19 20 nmod
+tag nn 20 14 pmod
+for in 21 20 nmod
+the dt 22 23 nmod
+game nn 23 21 pmod
+, , 24 26 p
+it pp 25 26 sbj
+be vbz 26 6 coord
+a dt 27 29 nmod
+little jj 28 29 nmod
+bit nn 29 30 sbj
+easy jjr 30 26 prd
+to to 31 32 vmod
+swallow vv 32 30 amod
+. sent 33 6 p
+</malt>
+<lemsent>pay more for new car be not the most ideal scenario , but at a less-than-full-retail-price $ @card@ price tag for the game , it 's a little bit easy to swallow .</lemsent>
+<result>(('pay', 1), ('vvg', '1', '6')), (('more', 2), ('rbr', '2', '3')), (('for', 3), ('in', '3', '1')), (('new', 4), ('jj', '4', '5')), (('car', 5), ('nns', '5', '3')), (('be', 6), ('vbz', '6', '0')), (('not', 7), ('rb', '7', '6')), (('the', 8), ('dt', '8', '11')), (('most', 9), ('rbs', '9', '10')), (('ideal', 10), ('jj', '10', '11')), (('scenario', 11), ('nn', '11', '6')), ((',', 12), (',', '12', '6')), (('but', 13), ('cc', '13', '6')), (('at', 14), ('in', '14', '26')), (('a', 15), ('dt', '15', '20')), (('less', 16), ('jj', '16', '20')), (('$', 24), ('$', '17', '20')), (('@card@', 25), ('cd', '18', '17')), (('price', 26), ('nn', '19', '20')), (('tag', 27), ('nn', '20', '14')), (('for', 28), ('in', '21', '20')), (('the', 29), ('dt', '22', '23')), (('game', 30), ('nn', '23', '21')), ((',', 31), (',', '24', '26')), (('it', 32), ('pp', '25', '26')), (("'s", 33), ('vbz', '26', '6')), (('a', 34), ('dt', '27', '29')), (('little', 35), ('jj', '28', '29')), (('bit', 36), ('nn', '29', '30')), (('easy', 37), ('jjr', '30', '26')), (('to', 38), ('to', '31', '32')), (('swallow', 39), ('vv', '32', '30')), (('.', 40), ('sent', '33', '6'))</result>
+</test>

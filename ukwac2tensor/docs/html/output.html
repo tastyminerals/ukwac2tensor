@@ -1,0 +1,301 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Output description &mdash; ukwac2tensor 0.0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="ukwac2tensor 0.0.1 documentation" href="index.html"/>
+        <link rel="prev" title="ukwac2tensor scripts" href="ukwac2tensor.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ukwac2tensor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Howto</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ukwac2tensor.html">ukwac2tensor scripts</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Output description</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#input-ukwac-corpus-file-ukwac-converter-py">INPUT (ukWaC corpus file) -&gt; ukwac_converter.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ukwac-converter-py-output-head-searcher-py">ukwac_converter.py -&gt; OUTPUT -&gt; head_searcher.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#head-searcher-py-output-tensor-py">head_searcher.py -&gt; OUTPUT -&gt; tensor.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output-xml-tags-description">OUTPUT XML tags description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tensor-py-output">tensor.py -&gt; OUTPUT</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">ukwac2tensor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Output description</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/output.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="output-description">
+<h1>Output description<a class="headerlink" href="#output-description" title="Permalink to this headline">¶</a></h1>
+<p>Here you can find the I/O description of the complete pipeline as well as the examples of <strong>ukwac2tensor</strong> <strong>INPUT</strong> and <strong>OUTPUT</strong> files.</p>
+<div class="section" id="input-ukwac-corpus-file-ukwac-converter-py">
+<h2>INPUT (ukWaC corpus file) -&gt; ukwac_converter.py<a class="headerlink" href="#input-ukwac-corpus-file-ukwac-converter-py" title="Permalink to this headline">¶</a></h2>
+<p><strong>ukwac.fixed-nowiki.node0031.gz</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">s</span><span class="o">&gt;</span>
+<span class="n">I</span>   <span class="n">I</span>       <span class="n">PP</span>      <span class="mi">1</span>       <span class="mi">2</span>       <span class="n">SBJ</span>
+<span class="n">took</span>        <span class="n">take</span>    <span class="n">VVD</span>     <span class="mi">2</span>       <span class="mi">0</span>       <span class="n">ROOT</span>
+<span class="n">very</span>        <span class="n">very</span>    <span class="n">RB</span>      <span class="mi">3</span>       <span class="mi">4</span>       <span class="n">AMOD</span>
+<span class="n">little</span>      <span class="n">little</span>  <span class="n">JJ</span>      <span class="mi">4</span>       <span class="mi">5</span>       <span class="n">NMOD</span>
+<span class="n">part</span>        <span class="n">part</span>    <span class="n">NN</span>      <span class="mi">5</span>       <span class="mi">2</span>       <span class="n">OBJ</span>
+<span class="ow">in</span>  <span class="ow">in</span>      <span class="n">IN</span>      <span class="mi">6</span>       <span class="mi">2</span>       <span class="n">ADV</span>
+<span class="n">the</span> <span class="n">the</span>     <span class="n">DT</span>      <span class="mi">7</span>       <span class="mi">8</span>       <span class="n">NMOD</span>
+<span class="n">conversation</span>        <span class="n">conversation</span>    <span class="n">NN</span>      <span class="mi">8</span>       <span class="mi">6</span>       <span class="n">PMOD</span>
+<span class="o">.</span>   <span class="o">.</span>       <span class="n">SENT</span>    <span class="mi">9</span>       <span class="mi">2</span>       <span class="n">P</span>
+<span class="o">&lt;/</span><span class="n">s</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="ukwac-converter-py-output-head-searcher-py">
+<h2>ukwac_converter.py -&gt; OUTPUT -&gt; head_searcher.py<a class="headerlink" href="#ukwac-converter-py-output-head-searcher-py" title="Permalink to this headline">¶</a></h2>
+<p><strong>ukwac.fixed-nowiki.node0031.converted.xml.gz</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">s</span><span class="o">&gt;</span>
+   <span class="o">&lt;</span><span class="n">predicate</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="n">governor</span><span class="o">&gt;</span><span class="n">take</span><span class="o">/</span><span class="n">VBD</span><span class="o">/</span><span class="mi">2</span><span class="o">&lt;/</span><span class="n">governor</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="n">dependencies</span><span class="o">&gt;</span>
+         <span class="o">&lt;</span><span class="n">dep</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;A0&quot;</span><span class="o">&gt;</span><span class="n">I</span><span class="o">/</span><span class="n">PRP</span><span class="o">/</span><span class="mi">1</span><span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span>
+         <span class="o">&lt;</span><span class="n">dep</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;V&quot;</span><span class="o">&gt;</span><span class="n">take</span><span class="o">/</span><span class="n">VBD</span><span class="o">/</span><span class="mi">2</span><span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span>
+         <span class="o">&lt;</span><span class="n">dep</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;A2&quot;</span><span class="o">&gt;</span><span class="n">very</span><span class="o">/</span><span class="n">RB</span><span class="o">/</span><span class="mi">3</span> <span class="n">little</span><span class="o">/</span><span class="n">JJ</span><span class="o">/</span><span class="mi">4</span><span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span>
+         <span class="o">&lt;</span><span class="n">dep</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;A1&quot;</span><span class="o">&gt;</span><span class="n">part</span><span class="o">/</span><span class="n">NN</span><span class="o">/</span><span class="mi">5</span><span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span>
+         <span class="o">&lt;</span><span class="n">dep</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;AM-LOC&quot;</span><span class="o">&gt;</span><span class="ow">in</span><span class="o">/</span><span class="n">IN</span><span class="o">/</span><span class="mi">6</span> <span class="n">the</span><span class="o">/</span><span class="n">DT</span><span class="o">/</span><span class="mi">7</span> <span class="n">conversation</span><span class="o">/</span><span class="n">NN</span><span class="o">/</span><span class="mi">8</span><span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span>
+      <span class="o">&lt;/</span><span class="n">dependencies</span><span class="o">&gt;</span>
+   <span class="o">&lt;/</span><span class="n">predicate</span><span class="o">&gt;</span>
+<span class="o">&lt;/</span><span class="n">s</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="head-searcher-py-output-tensor-py">
+<h2>head_searcher.py -&gt; OUTPUT -&gt; tensor.py<a class="headerlink" href="#head-searcher-py-output-tensor-py" title="Permalink to this headline">¶</a></h2>
+<p><strong>heads.ukwac.fixed-nowiki.node0031.converted.xml.gz</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">s</span><span class="o">&gt;</span>
+   <span class="o">&lt;</span><span class="n">predicate</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="n">governor</span><span class="o">&gt;</span><span class="n">take</span><span class="o">/</span><span class="n">VBD</span><span class="o">/</span><span class="mi">2</span><span class="o">&lt;/</span><span class="n">governor</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="n">dependencies</span><span class="o">&gt;</span>
+         <span class="o">&lt;</span><span class="n">dep</span> <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;MALT&quot;</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;I/PRP/1&quot;</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;I&quot;</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;A0&quot;</span><span class="o">&gt;</span><span class="n">i</span><span class="o">/</span><span class="n">prp</span><span class="o">/</span><span class="mi">1</span><span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span>
+         <span class="o">&lt;</span><span class="n">dep</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;take/VBD/2&quot;</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;take&quot;</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;V&quot;</span><span class="o">&gt;</span><span class="n">take</span><span class="o">/</span><span class="n">VBD</span><span class="o">/</span><span class="mi">2</span><span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span>
+         <span class="o">&lt;</span><span class="n">dep</span> <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;FAILED&quot;</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;very/RB/3 little/JJ/4&quot;</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;very little&quot;</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;A2&quot;</span><span class="o">&gt;</span><span class="n">very</span><span class="o">/</span><span class="n">rb</span><span class="o">/</span><span class="mi">3</span> <span class="n">little</span><span class="o">/</span><span class="n">jj</span><span class="o">/</span><span class="mi">4</span><span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span>
+         <span class="o">&lt;</span><span class="n">dep</span> <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;MALT&quot;</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;part/NN/5&quot;</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;part&quot;</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;A1&quot;</span><span class="o">&gt;</span><span class="n">part</span><span class="o">/</span><span class="n">nn</span><span class="o">/</span><span class="mi">5</span><span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span>
+         <span class="o">&lt;</span><span class="n">dep</span> <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;MALT&quot;</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;in/IN/6 the/DT/7 conversation/NN/8&quot;</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;in the conversation&quot;</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;AM-LOC&quot;</span><span class="o">&gt;</span><span class="n">conversation</span><span class="o">/</span><span class="n">nn</span><span class="o">/</span><span class="mi">8</span><span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span>
+      <span class="o">&lt;/</span><span class="n">dependencies</span><span class="o">&gt;</span>
+   <span class="o">&lt;/</span><span class="n">predicate</span><span class="o">&gt;</span>
+<span class="o">&lt;/</span><span class="n">s</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="output-xml-tags-description">
+<h2>OUTPUT XML tags description<a class="headerlink" href="#output-xml-tags-description" title="Permalink to this headline">¶</a></h2>
+<div class="line-block">
+<div class="line"><code class="docutils literal"><span class="pre">&lt;sents&gt;</span></code> &#8211; a root element of the xml file, contains &lt;text&gt; and &lt;s&gt;.</div>
+<div class="line"><br /></div>
+<div class="line"><code class="docutils literal"><span class="pre">&lt;text&gt;</span></code> &#8211; contains &#8220;id&#8221; attribute that is a url address of the sentences below until next &lt;text&gt; element.</div>
+<div class="line"><br /></div>
+<div class="line"><code class="docutils literal"><span class="pre">&lt;s&gt;</span></code> &#8211; an element that contains a sentence processed by head searching algorithms.</div>
+<div class="line"><br /></div>
+<div class="line"><code class="docutils literal"><span class="pre">&lt;predicate&gt;</span></code> &#8211; sentence predicate block.</div>
+<div class="line"><br /></div>
+<div class="line"><code class="docutils literal"><span class="pre">&lt;governor&gt;</span></code> &#8211; governor of the respective predicate block, e.g. examine/VBZ/12, where examine is a word, VBZ is a POS-tag and 12 is word index in a sentence &lt;s&gt; element.</div>
+<div class="line"><br /></div>
+<div class="line"><code class="docutils literal"><span class="pre">&lt;dependencies&gt;</span></code> &#8211; a block of dependencies for the current sentence governor, contains &lt;dep&gt; elements.</div>
+<div class="line"><br /></div>
+<div class="line"><code class="docutils literal"><span class="pre">&lt;dep&gt;</span></code> &#8211; a single dependency of a current governor, contains a head word extracted by one of the head searching algorithms, e.g. state/nn/16 where state is a head word, nn is a POS-tag, 16 is a word index. The element also contains the following important attributes:</div>
+</div>
+<blockquote>
+<div><div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><code class="docutils literal"><span class="pre">algorithm</span></code> &#8211; contains a name of a head searching algorithm used for head finding, e.g. MALT, MALT_SPAN, LINEAR or FAILED if no algorithm was able to find a head.</div>
+<div class="line"><code class="docutils literal"><span class="pre">source</span></code> &#8211; contains tokenized, lemmatized and POS-tagged clause governed by the &lt;governor&gt;. This clause is used by head searching algorithms.</div>
+<div class="line"><code class="docutils literal"><span class="pre">text</span></code> &#8211; contains tokenized, lemmatized clause governed by the &lt;governor&gt;. Similar to &#8220;source&#8221; but without POS-tags.</div>
+<div class="line"><code class="docutils literal"><span class="pre">type</span></code> &#8211; dependency type that follows <a class="reference external" href="https://verbs.colorado.edu/~mpalmer/projects/ace/PBguidelines.pdf">PropBank annotation</a>.</div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="tensor-py-output">
+<h2>tensor.py -&gt; OUTPUT<a class="headerlink" href="#tensor-py-output" title="Permalink to this headline">¶</a></h2>
+<p><strong>tensor.MALT-MALT_SPAN-LINEAR.h5</strong>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="n">tensor</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_hdf</span><span class="p">(</span><span class="s1">&#39;tensor_pmi.MALT-MALT_SPAN-LINEAR.h5&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;tensor&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="ukwac2tensor.html" class="btn btn-neutral" title="ukwac2tensor scripts" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, tastyminerals.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

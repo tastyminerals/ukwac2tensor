@@ -1,0 +1,389 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Howto &mdash; ukwac2tensor 0.0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="ukwac2tensor 0.0.1 documentation" href="index.html"/>
+        <link rel="next" title="ukwac2tensor scripts" href="ukwac2tensor.html"/>
+        <link rel="prev" title="Introduction" href="intro.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ukwac2tensor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Howto</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-ukwac-converter-py-with-qsub">Running &#8220;ukwac_converter.py&#8221; with <strong>qsub</strong>:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-ukwac-converter-py-locally">Running &#8220;ukwac_converter.py&#8221; locally:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-head-searcher-py-with-qsub">Running &#8220;head_searcher.py&#8221; with <strong>qsub</strong>:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-head-searcher-py-locally">Running &#8220;head_searcher.py&#8221; locally:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-tensor-py-locally">Running &#8220;tensor.py&#8221; locally:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#processing-options">Processing options</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ukwac2tensor.html">ukwac2tensor scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output.html">Output description</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">ukwac2tensor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Howto</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/usage.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="howto">
+<span id="id1"></span><h1>Howto<a class="headerlink" href="#howto" title="Permalink to this headline">¶</a></h1>
+<p>Our goal is to convert <a class="reference external" href="http://wacky.sslmit.unibo.it/doku.php?id=corpora">ukWaC corpus</a>
+into 3-d order tensor, which is basically a huge collection of triples
+<code class="docutils literal"><span class="pre">&quot;dependant&quot;,</span> <span class="pre">&quot;relation</span> <span class="pre">type&quot;,</span> <span class="pre">&quot;governor&quot;:</span> <span class="pre">&quot;counts&quot;</span></code>.
+But first, in order to use <strong>ukwac2tensor</strong> project scripts, you must install
+all necessary dependencies.</p>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><div class="line-block">
+<div class="line"><em>SENNA</em> &#8211; SENNA can be downloaded from <a class="reference external" href="http://ml.nec-labs.com/senna/">here</a>.
+Extract and put it into the directory where <strong>ukwac2tensor</strong> scripts are located.</div>
+<div class="line"><br /></div>
+<div class="line"><em>hdf5</em> &#8211; General purpose library and file format for storing scientific data.
+Official <a class="reference external" href="https://www.hdfgroup.org/HDF5/release/obtain5.html">downloads page</a>.
+Best use your system&#8217;s package manager to search and install it.</div>
+<div class="line"><br /></div>
+<div class="line"><em>python2-h5py</em> &#8211; General-purpose Python bindings for the HDF5 library.
+Version currently used <em>2.5.0</em>.
+Use your system&#8217;s package manager to search and install it or use
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">pip2</span> <span class="pre">install</span> <span class="pre">h5py</span></code>.</div>
+<div class="line"><br /></div>
+<div class="line"><em>pandas</em> &#8211; python data analysis library, version currently used <em>0.16.2</em>.
+Use your system&#8217;s package manager to search and install it or use
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">pip2</span> <span class="pre">install</span> <span class="pre">pandas</span></code>.</div>
+<div class="line"><br /></div>
+<div class="line"><em>pycallgraph</em> (optional) &#8211; If you want to run benchmarks and examine possible
+bottlenecks. This module generates script execution graphs in png format.
+<code class="docutils literal"><span class="pre">sudo</span> <span class="pre">pip2</span> <span class="pre">install</span> <span class="pre">pycallgraph</span></code></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p><strong>ukwac2tensor</strong> package consists of 3 scripts: <strong>&#8220;ukwac_converter.py&#8221;</strong>, <strong>&#8220;head_searcher.py&#8221;</strong>, <strong>&#8220;tensor.py&#8221;</strong>
+that should be executed in sequentially in this order.</p>
+<p>Once we downloaded <strong>ukWaC</strong> corpus into some custom directory, let it be &#8220;ukwac_sources&#8221;,
+we can start processing.</p>
+<p>IMPORTANT! <strong>ukWaC</strong> source files should follow the following naming convention:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ukwac</span><span class="o">.</span><span class="n">fixed</span><span class="o">-</span><span class="n">nowiki</span><span class="o">.</span><span class="n">node0001</span><span class="o">.</span><span class="n">gz</span>
+<span class="n">ukwac</span><span class="o">.</span><span class="n">fixed</span><span class="o">-</span><span class="n">nowiki</span><span class="o">.</span><span class="n">node0002</span><span class="o">.</span><span class="n">gz</span>
+<span class="n">ukwac</span><span class="o">.</span><span class="n">fixed</span><span class="o">-</span><span class="n">nowiki</span><span class="o">.</span><span class="n">node0003</span><span class="o">.</span><span class="n">gz</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>If you are too lazy to rename the files, go to &#8220;ukwac_converter.py&#8221; and modify the following line:</dt>
+<dd><code class="docutils literal"><span class="pre">name</span> <span class="pre">=</span> <span class="pre">os.path.join(args.dir,</span> <span class="pre">'ukwac.fixed-nowiki.node'</span> <span class="pre">+</span> <span class="pre">sge_id</span> <span class="pre">+</span> <span class="pre">'.gz')</span></code></dd>
+</dl>
+<p>There are two different ways you can run &#8220;ukwac_coverter.py&#8221;
+and &#8220;head_searcher.py&#8221;: locally or using <a class="reference external" href="http://gridscheduler.sourceforge.net/htmlman/htmlman1/qsub.html">qsub</a>.
+<strong>qsub</strong> is <a class="reference external" href="http://www.math.duke.edu/computing/grid/">Sun Grid Engine</a> utility.
+If you care about performance, do use <strong>qsub</strong>, especially when running &#8220;ukwac_converter.py&#8221;.</p>
+<p><strong>First</strong>, we need to convert <strong>ukWaC</strong> to xml. &#8220;ukwac_converter.py&#8221; extracts sentences from
+the corpus and runs them through <strong>SENNA</strong> role labeler. After that we collect <strong>SENNA</strong>
+output and convert it to xml. The script does various preprocessing and normalizing steps
+as well. See &#8220;ukwac_converter.py&#8221; docs for details.</p>
+</div>
+<div class="section" id="running-ukwac-converter-py-with-qsub">
+<h2>Running &#8220;ukwac_converter.py&#8221; with <strong>qsub</strong>:<a class="headerlink" href="#running-ukwac-converter-py-with-qsub" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ol class="arabic simple">
+<li><code class="docutils literal"><span class="pre">ssh</span> <span class="pre">you&#64;login.coli.uni-saarland.de</span></code></li>
+<li><code class="docutils literal"><span class="pre">ssh</span> <span class="pre">forbin</span></code></li>
+<li>Navigate to the directory where you keep <code class="docutils literal"><span class="pre">ukwac_sources</span></code>.</li>
+<li>Assuming <strong>ukwac2tensor</strong> scripts are already there, run:
+<code class="docutils literal"><span class="pre">qsub</span> <span class="pre">-cwd</span> <span class="pre">-V</span> <span class="pre">-t</span> <span class="pre">1-5:1</span> <span class="pre">-b</span> <span class="pre">y</span> <span class="pre">./ukwac_converter.py</span> <span class="pre">-qs</span> <span class="pre">-d</span> <span class="pre">ukwac_sources</span> <span class="pre">-o</span> <span class="pre">converted_sources</span></code></li>
+</ol>
+<p>HINT! <code class="docutils literal"><span class="pre">1-5:1</span></code> means that we want to convert a range of [1-5] <strong>ukWaC</strong> source files
+with a step of 1. If you want to convert the whole corpus, you need to know the number
+of files in <code class="docutils literal"><span class="pre">ukwac_sources</span></code>. If it is 3500, then do <code class="docutils literal"><span class="pre">1-3500:1</span></code> accordingly.</p>
+<p>Check is the your <strong>qsub</strong> job was submitted by running <strong>qstat</strong> or <strong>qstat -f</strong></p>
+</div></blockquote>
+</div>
+<div class="section" id="running-ukwac-converter-py-locally">
+<h2>Running &#8220;ukwac_converter.py&#8221; locally:<a class="headerlink" href="#running-ukwac-converter-py-locally" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ol class="arabic simple">
+<li><code class="docutils literal"><span class="pre">ukwac_converter.py</span> <span class="pre">-d</span> <span class="pre">ukwac_sources</span> <span class="pre">-o</span> <span class="pre">converted_sources</span></code>
+<code class="docutils literal"><span class="pre">ukwac_converter.py</span> <span class="pre">-f</span> <span class="pre">ukwac.fixed-nowiki.node0001.gz</span></code> for single file</li>
+</ol>
+</div></blockquote>
+<p><strong>Second</strong>, we need to extract phrase heads from the converted files. &#8220;head_searcher.py&#8221;
+does exactly that. It uses a sequence of head extraction strategies and writes back
+xml file.</p>
+</div>
+<div class="section" id="running-head-searcher-py-with-qsub">
+<h2>Running &#8220;head_searcher.py&#8221; with <strong>qsub</strong>:<a class="headerlink" href="#running-head-searcher-py-with-qsub" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ol class="arabic simple">
+<li><code class="docutils literal"><span class="pre">ssh</span> <span class="pre">you&#64;login.coli.uni-saarland.de</span></code></li>
+<li><code class="docutils literal"><span class="pre">ssh</span> <span class="pre">forbin</span></code></li>
+<li>Navigate to the directory where you keep <code class="docutils literal"><span class="pre">converted_sources</span></code></li>
+<li><code class="docutils literal"><span class="pre">qsub</span> <span class="pre">-cwd</span> <span class="pre">-V</span> <span class="pre">-t</span> <span class="pre">1-5:1</span> <span class="pre">-b</span> <span class="pre">y</span> <span class="pre">./head_searcher.py</span> <span class="pre">-qs</span> <span class="pre">-d</span> <span class="pre">converted_sources</span></code></li>
+</ol>
+</div></blockquote>
+</div>
+<div class="section" id="running-head-searcher-py-locally">
+<h2>Running &#8220;head_searcher.py&#8221; locally:<a class="headerlink" href="#running-head-searcher-py-locally" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ol class="arabic simple">
+<li><code class="docutils literal"><span class="pre">./head_searcher.py</span> <span class="pre">-d</span> <span class="pre">converted_sources</span></code>
+<code class="docutils literal"><span class="pre">./head_searcher.py</span> <span class="pre">-f</span> <span class="pre">ukwac.fixed-nowiki.node0001.converted.xml.gz</span></code> for single file</li>
+</ol>
+</div></blockquote>
+<p><strong>Third</strong>, using the files with extracted heads we count &#8220;dependant&#8221;, &#8220;relation type&#8221;, &#8220;governor&#8221; occurrences.</p>
+</div>
+<div class="section" id="running-tensor-py-locally">
+<h2>Running &#8220;tensor.py&#8221; locally:<a class="headerlink" href="#running-tensor-py-locally" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ol class="arabic simple">
+<li><code class="docutils literal"><span class="pre">ssh</span> <span class="pre">you&#64;login.coli.uni-saarland.de</span></code></li>
+<li><code class="docutils literal"><span class="pre">ssh</span> <span class="pre">falken-1</span></code></li>
+<li>Copy the files generated by <code class="docutils literal"><span class="pre">head_searcher.py</span></code> to your <strong>falken-{x}</strong> machine</li>
+<li>Run <code class="docutils literal"><span class="pre">tensor.py</span> <span class="pre">-d</span> <span class="pre">head_files</span> <span class="pre">&gt;&gt;</span> <span class="pre">log.txt</span> <span class="pre">2&gt;&amp;1</span> <span class="pre">&amp;</span> <span class="pre">disown</span></code> or if you need to see console output
+<code class="docutils literal"><span class="pre">tensor.py</span> <span class="pre">-d</span> <span class="pre">head_files</span> <span class="pre">&amp;</span></code></li>
+</ol>
+<p>HINT! <code class="docutils literal"><span class="pre">&gt;&gt;</span> <span class="pre">log.txt</span> <span class="pre">2&gt;&amp;1</span></code> shall write the script output and errors into log.txt.</p>
+</div></blockquote>
+</div>
+<div class="section" id="processing-options">
+<h2>Processing options<a class="headerlink" href="#processing-options" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Each script has a number of options that you can use. Such as explicitly defining input
+and output directories or running the script locally or with <strong>qsub</strong>.
+For example, run <code class="docutils literal"><span class="pre">ukwac_converter.py</span> <span class="pre">-h</span></code> to see what options are available.</p>
+<dl class="docutils">
+<dt>ukwac_converter.py:</dt>
+<dd><code class="docutils literal"><span class="pre">ukwac_converter.py</span></code> script has standard options we won&#8217;t discuss them.</dd>
+<dt>head_searcher.py:</dt>
+<dd><code class="docutils literal"><span class="pre">-a</span></code> or <code class="docutils literal"><span class="pre">--alg</span></code> helps you to define the head searching strategy (algorithm) explicitly.
+For example, <code class="docutils literal"><span class="pre">python2</span> <span class="pre">head_searcher.py</span> <span class="pre">-a</span> <span class="pre">MALT</span> <span class="pre">-d</span> <span class="pre">ukwac_converted</span></code> will tell the
+script to process ukwac files using only MALT strategy, when
+<code class="docutils literal"><span class="pre">python2</span> <span class="pre">head_searcher.py</span> <span class="pre">-a</span> <span class="pre">MALT,LINEAR</span> <span class="pre">-d</span> <span class="pre">ukwac_converted</span></code>
+will tell the script to use MALT and LINEAR (skipping MALT_SPAN).</dd>
+<dt>tensor.py:</dt>
+<dd><p class="first">There are three important options for this script.
+<code class="docutils literal"><span class="pre">-filter</span></code> option helps you to define a filter dictionary.
+Here is an example of a potential filter file:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">two</span><span class="o">-</span><span class="n">n</span>
+<span class="n">day</span><span class="o">-</span><span class="n">n</span>
+<span class="n">know</span><span class="o">-</span><span class="n">v</span>
+<span class="n">well</span><span class="o">-</span><span class="n">n</span>
+<span class="n">way</span><span class="o">-</span><span class="n">n</span>
+</pre></div>
+</div>
+<p>So, <code class="docutils literal"><span class="pre">python2</span> <span class="pre">tensor.py</span> <span class="pre">-filter</span> <span class="pre">FILTER.txt</span> <span class="pre">-d</span> <span class="pre">heads_files</span></code> will use a FILTER.txt to
+skip any terms (words) that are not listed in it. For example, if you have the following
+triple <code class="docutils literal"><span class="pre">(&quot;day-n&quot;,</span> <span class="pre">&quot;A0&quot;,</span> <span class="pre">&quot;come-v&quot;)</span></code>, it will not be included into the result tensor
+because &#8220;come-v&#8221; is not listed in the above dictionary.</p>
+<p><code class="docutils literal"><span class="pre">-include-failed</span></code> allows you to include failed <em>singleton nodes</em>. A <strong>singleton</strong> is the node
+which consists of only one word which was marked as &#8220;FAILED&#8221; (phrase head was not found).
+The idea is &#8211; because singleton consists of just one word, we can include it as a valid phrase head.</p>
+<p>Singleton node example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span> <span class="o">&lt;</span><span class="n">predicate</span><span class="o">&gt;</span>
+   <span class="o">&lt;</span><span class="n">governor</span><span class="o">&gt;</span><span class="n">press</span><span class="o">/</span><span class="n">VBG</span><span class="o">/</span><span class="mi">4</span><span class="o">&lt;/</span><span class="n">governor</span><span class="o">&gt;</span>
+   <span class="o">&lt;</span><span class="n">dependencies</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="n">dep</span> <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;FAILED&quot;</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;A0&quot;</span><span class="o">&gt;</span><span class="n">those</span><span class="o">/</span><span class="n">dt</span><span class="o">/</span><span class="mi">3</span><span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span> <span class="o">&lt;--</span> <span class="n">Singleton</span> <span class="n">node</span>
+      <span class="o">&lt;</span><span class="n">dep</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;press/VBG/4&quot;</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;V&quot;</span><span class="o">&gt;</span><span class="n">press</span><span class="o">/</span><span class="n">VBG</span><span class="o">/</span><span class="mi">4</span><span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="n">dep</span> <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;MALT&quot;</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;A2&quot;</span><span class="o">&gt;</span><span class="n">individual</span><span class="o">/</span><span class="n">nns</span><span class="o">/</span><span class="mi">7</span><span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="n">dep</span> <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;LINEAR&quot;</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;AM-LOC&quot;</span><span class="o">&gt;</span><span class="n">stockmarket</span><span class="o">/</span><span class="n">nn</span><span class="o">/</span><span class="mi">10</span><span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span>
+   <span class="o">&lt;/</span><span class="n">dependencies</span><span class="o">&gt;</span>
+<span class="o">&lt;/</span><span class="n">predicate</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p class="last"><code class="docutils literal"><span class="pre">-a</span></code> or <code class="docutils literal"><span class="pre">--alg</span></code> allows you to filter the results produced by head searching
+strategies. Using <code class="docutils literal"><span class="pre">python2</span> <span class="pre">tensor.py</span> <span class="pre">-a</span> <span class="pre">LINEAR</span> <span class="pre">-d</span> <span class="pre">head_files</span></code> includes into the tensor the results
+of LINEAR strategy only.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ukwac2tensor.html" class="btn btn-neutral float-right" title="ukwac2tensor scripts" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="intro.html" class="btn btn-neutral" title="Introduction" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, tastyminerals.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

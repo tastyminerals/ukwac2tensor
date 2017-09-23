@@ -1,0 +1,593 @@
+<text id="ukwac:http://www.adventureworks.co.uk/exp/nepal.html">
+<s>
+Does	do	VVZ	1	0	ROOT
+n't	n't	RB	2	1	VMOD
+the	the	DT	3	4	NMOD
+term	term	NN	4	1	SBJ
+suggest	suggest	VVP	5	1	VC
+something	something	NN	6	5	OBJ
+like	like	IN	7	6	NMOD
+"	"	``	8	7	P
+mental	mental	JJ	9	10	NMOD
+pictures	picture	NNS	10	7	PMOD
+"	"	''	11	5	P
+?	?	SENT	12	1	P
+</s>
+<s>
+"	"	``	1	2	SBJ
+Ca	Ca	MD	2	0	ROOT
+n't	n't	RB	3	2	VMOD
+you	you	PP	4	2	SBJ
+ever	ever	RB	5	6	ADV
+think	think	VVP	6	2	COORD
+about	about	IN	7	6	ADV
+anything	anything	NN	8	7	PMOD
+but	but	CC	9	8	CC
+correcting	correct	VVG	10	11	NMOD
+grammar	grammar	NN	11	8	COORD
+?	?	SENT	12	2	P
+"	"	''	13	2	P
+</s>
+<s>
+Are	be	VBP	1	0	ROOT
+n't	n't	RB	2	1	VMOD
+they	they	PP	3	1	SBJ
+lovely	lovely	JJ	4	1	PRD
+?	?	SENT	5	1	P
+"	"	''	6	1	P
+</s>
+<s>
+Could	Could	MD	1	0	ROOT
+n't	n't	RB	2	1	VMOD
+they	they	PP	3	1	SBJ
+see	see	VVP	4	1	VC
+how	how	WRB	5	0	ROOT
+it	it	PP	6	7	SBJ
+had	have	VHD	7	4	OBJ
+to	to	TO	8	9	VMOD
+be	be	VB	9	7	OBJ
+nourished	nourish	VVN	10	9	VC
+?	?	SENT	11	1	P
+</s>
+<s>
+"	"	''	1	2	SBJ
+Did	do	VVD	2	0	ROOT
+n't	n't	RB	3	2	VMOD
+I	I	PP	4	5	SBJ
+live	live	VVP	5	2	OBJ
+just	just	RB	6	5	ADV
+now	now	RB	7	6	AMOD
+?	?	SENT	8	2	P
+"	"	''	9	2	P
+</s>
+<s>
+So	so	RB	1	11	VMOD
+for	for	IN	2	11	VMOD
+all	all	DT	3	6	NMOD
+you	you	PP	4	6	NMOD
+Seles	Seles	NP	5	6	NMOD
+fans	fan	NNS	6	2	PMOD
+,	,	,	7	6	P
+let	let	VVN	8	6	NMOD
+'s	's	POS	9	8	NMOD
+just	just	RB	10	11	ADV
+get	get	VV	11	0	ROOT
+this	this	DT	12	13	SBJ
+sorted	sort	VVN	13	11	OBJ
+out	out	RP	14	13	PRT
+once	once	RB	15	13	ADV
+and	and	CC	16	15	CC
+for	for	IN	17	15	COORD
+all	all	DT	18	17	PMOD
+.	.	SENT	19	11	P
+</s>
+<s>
+Let	let	VV	1	0	ROOT
+'s	be	VBZ	2	3	SBJ
+talk	talk	VV	3	1	OBJ
+about	about	IN	4	3	ADV
+something	something	NN	5	4	PMOD
+more	more	RBR	6	7	AMOD
+sisterly	sisterly	JJ	7	5	NMOD
+.	.	SENT	8	1	P
+</s>
+<s>
+I	I	PP	1	2	SBJ
+need	need	VVP	2	0	ROOT
+n't	n't	RB	3	2	VMOD
+have	have	VH	4	2	VC
+worried	worry	VVN	5	4	VC
+.	.	SENT	6	2	P
+</s>
+<s>
+You	you	PP	1	2	SBJ
+might	might	MD	2	0	ROOT
+n't	n't	RB	3	2	VMOD
+think	think	VV	4	2	VC
+it	it	PP	5	0	ROOT
+but	but	CC	6	5	CC
+it	it	PP	7	8	SBJ
+would	would	MD	8	4	OBJ
+be	be	VB	9	8	VC
+nice	nice	JJ	10	9	PRD
+to	to	TO	11	12	VMOD
+feel	feel	VV	12	10	AMOD
+proud	proud	JJ	13	12	PRD
+of	of	IN	14	13	AMOD
+where	where	WRB	15	17	ADV
+you	you	PP	16	17	SBJ
+come	come	VVP	17	14	PMOD
+from	from	IN	18	17	ADV
+.	.	SENT	19	2	P
+</s>
+<s>
+He	he	PP	1	2	SBJ
+must	must	MD	2	0	ROOT
+'ve	have	VH	3	2	VC
+broken	break	VVN	4	3	VC
+the	the	DT	5	7	NMOD
+other	other	JJ	6	7	NMOD
+arm	arm	NN	7	4	OBJ
+because	because	IN	8	0	ROOT
+the	the	DT	9	11	NMOD
+next	next	JJ	10	11	NMOD
+day	day	NN	11	0	ROOT
+he	he	PP	12	13	SBJ
+had	have	VHD	13	11	NMOD
+both	both	DT	14	15	NMOD
+arms	arm	NNS	15	13	OBJ
+in	in	IN	16	13	ADV
+plaster	plaster	NN	17	16	PMOD
+.	.	SENT	18	2	P
+</s>
+<s>
+You	you	PP	1	2	SBJ
+must	must	MD	2	0	ROOT
+n't	n't	RB	3	2	VMOD
+mind	mind	VV	4	2	VC
+what	what	WP	5	7	OBJ
+kids	kid	NNS	6	7	SBJ
+say	say	VVP	7	4	OBJ
+.	.	SENT	8	2	P
+</s>
+<s>
+She	she	PP	1	2	SBJ
+need	need	VVP	2	0	ROOT
+n't	n't	RB	3	2	VMOD
+have	have	VH	4	2	OBJ
+wondered	wonder	VVD	5	4	VC
+.	.	SENT	6	2	P
+</s>
+<s>
+Why	why	WRB	1	2	DEP
+should	should	MD	2	0	ROOT
+n't	n't	RB	3	2	VMOD
+he	he	PP	4	2	SBJ
+just	just	RB	5	2	ADV
+be	be	VB	6	2	VC
+getting	get	VVG	7	6	VC
+old	old	JJ	8	7	PRD
+?	?	SENT	9	2	P
+</s>
+<s>
+It	it	PP	1	2	SBJ
+was	be	VBD	2	0	ROOT
+n't	n't	RB	3	2	VMOD
+the	the	DT	4	7	NMOD
+first	first	JJ	5	7	NMOD
+such	such	JJ	6	7	NMOD
+attack	attack	NN	7	2	PRD
+.	.	SENT	8	2	P
+</s>
+<s>
+I	I	PP	1	2	SBJ
+would	would	MD	2	0	ROOT
+n't	n't	RB	3	2	VMOD
+take	take	VV	4	2	VC
+an	a	DT	5	6	NMOD
+egg	egg	NN	6	4	OBJ
+from	from	IN	7	6	NMOD
+the	the	DT	8	10	NMOD
+village	village	NN	9	10	NMOD
+folk	folk	NN	10	7	PMOD
+.	.	SENT	11	2	P
+</s>
+<s>
+"	"	``	1	10	DEP
+You	you	PP	2	3	SBJ
+were	be	VBD	3	0	ROOT
+n't	n't	RB	4	3	VMOD
+with	with	IN	5	3	PRD
+anyone	anyone	NN	6	5	PMOD
+in	in	IN	7	6	ADV
+the	the	DT	8	9	NMOD
+kitchen	kitchen	NN	9	7	PMOD
+.	.	SENT	10	0	ROOT
+</s>
+<s>
+But	but	CC	1	10	CC
+PowerGen	PowerGen	NP	2	0	ROOT
+and	and	CC	3	2	CC
+National	National	NP	4	10	DEP
+Power	Power	NP	5	6	SBJ
+wo	wo	MD	6	0	ROOT
+n't	n't	RB	7	6	VMOD
+like	like	VV	8	6	VC
+it	it	PP	9	8	OBJ
+.	.	SENT	10	0	ROOT
+</s>
+<s>
+For	for	IN	1	4	ADV
+sure	sure	RB	2	1	PMOD
+he	he	PP	3	4	SBJ
+takes	take	VVZ	4	0	ROOT
+pains	pain	NNS	5	4	OBJ
+to	to	TO	6	7	VMOD
+make	make	VV	7	4	EXP
+Tikhon	Tikhon	NP	8	11	NMOD
+a	a	DT	9	11	NMOD
+human	human	JJ	10	11	NMOD
+puzzle	puzzle	NN	11	7	OBJ
+so	so	IN	12	15	ADV
+that	that	WDT	13	12	PMOD
+he	he	PP	14	15	SBJ
+sha	sha	VVZ	15	7	ADV
+n't	n't	RB	16	15	VMOD
+in	in	IN	17	15	ADV
+any	any	DT	18	20	NMOD
+obvious	obvious	JJ	19	20	NMOD
+way	way	NN	20	17	PMOD
+speak	speak	VVP	21	4	COORD
+God	God	NP	22	24	NMOD
+'s	's	POS	23	22	NMOD
+truth	truth	NN	24	21	OBJ
+.	.	SENT	25	4	P
+</s>
+<s>
+They	they	PP	1	2	SBJ
+'ll	will	MD	2	0	ROOT
+be	be	VB	3	2	VC
+with	with	IN	4	3	PRD
+you	you	PP	5	4	PMOD
+again	again	RB	6	3	ADV
+in	in	IN	7	3	ADV
+a	a	DT	8	9	NMOD
+day	day	NN	9	7	PMOD
+or	or	CC	10	11	CC
+two	two	CD	11	9	NMOD
+,	,	,	12	3	P
+if	if	IN	13	15	VMOD
+you	you	PP	14	15	SBJ
+do	do	VVP	15	3	ADV
+n't	n't	RB	16	15	VMOD
+hold	hold	VV	17	15	VC
+us	us	PP	18	17	OBJ
+up	up	RP	19	17	PRT
+.	.	SENT	20	2	P
+</s>
+<s>
+"	"	''	1	2	NMOD
+Darling	darling	NN	2	0	ROOT
+,	,	,	3	6	P
+"	"	''	4	6	P
+he	he	PP	5	6	SBJ
+boomed	boom	VVD	6	0	ROOT
+,	,	,	7	6	P
+"	"	``	8	6	P
+you	you	PP	9	10	SBJ
+'ve	have	VHP	10	6	OBJ
+no	no	DT	11	12	NMOD
+idea	idea	NN	12	10	OBJ
+how	how	WRB	13	14	NMOD
+much	much	JJ	14	0	ROOT
+I	I	PP	15	16	SBJ
+'ve	have	VHP	16	12	NMOD
+missed	miss	VVN	17	16	VC
+you	you	PP	18	17	OBJ
+.	.	SENT	19	6	P
+"	"	''	20	6	P
+</s>
+<s>
+I	I	PP	1	2	SBJ
+'ve	have	VHP	2	0	ROOT
+been	be	VBN	3	2	VC
+asked	ask	VVN	4	3	VC
+to	to	TO	5	6	VMOD
+write	write	VV	6	4	OBJ
+about	about	IN	7	6	ADV
+it	it	PP	8	7	PMOD
+and	and	CC	9	2	CC
+I	I	PP	10	11	SBJ
+said	say	VVD	11	2	COORD
+I	I	PP	12	13	SBJ
+'d	will	MD	13	11	OBJ
+give	give	VV	14	13	VC
+it	it	PP	15	14	IOBJ
+a	a	DT	16	17	SBJ
+think	think	VVP	17	2	COORD
+.	.	SENT	18	2	P
+"	"	``	19	2	P
+</s>
+<s>
+I	I	PP	1	2	SBJ
+'d	will	MD	2	0	ROOT
+meet	meet	VV	3	2	VC
+up	up	RP	4	3	PRT
+with	with	IN	5	3	ADV
+the	the	DT	6	7	NMOD
+others	other	NNS	7	5	PMOD
+again	again	RB	8	7	NMOD
+on	on	IN	9	7	NMOD
+top	top	JJ	10	13	ADV
+and	and	CC	11	10	CC
+we	we	PP	12	13	SBJ
+'d	will	MD	13	9	PMOD
+descend	descend	VV	14	13	VC
+together	together	RB	15	14	ADV
+.	.	SENT	16	2	P
+</s>
+<s>
+He	he	PP	1	2	SBJ
+'d	have	VHD	2	0	ROOT
+been	be	VBN	3	2	VC
+up	up	RB	4	3	PRD
+since	since	IN	5	3	ADV
+six	six	CD	6	5	PMOD
+trying	try	VVG	7	6	NMOD
+to	to	TO	8	9	VMOD
+fix	fix	VV	9	7	OBJ
+his	his	PP$	10	11	NMOD
+motorbike	motorbike	NN	11	9	OBJ
+.	.	SENT	12	2	P
+</s>
+<s>
+The	the	DT	1	2	NMOD
+catalogue	catalogue	NN	2	8	SBJ
+of	of	IN	3	2	NMOD
+the	the	DT	4	7	NMOD
+earlier	earlier	RBR	5	7	NMOD
+Italian	Italian	JJ	6	7	NMOD
+schools	school	NNS	7	3	PMOD
+was	be	VBD	8	0	ROOT
+written	write	VVN	9	8	VC
+by	by	IN	10	9	LGS
+Martin	Martin	NP	11	15	SBJ
+Davies	Davies	NP	12	15	ADV
+,	,	,	13	15	P
+and	and	CC	14	15	SBJ
+published	publish	VVN	15	10	PMOD
+in	in	IN	16	15	ADV
+1951.	@ord@	CD	17	16	PMOD
+the	the	DT	18	19	NMOD
+strength	strength	NN	19	15	OBJ
+of	of	IN	20	19	NMOD
+the	the	DT	21	22	NMOD
+gallery	gallery	NN	22	24	NMOD
+'s	's	POS	23	22	NMOD
+holding	holding	NN	24	20	PMOD
+of	of	IN	25	24	NMOD
+works	work	NNS	26	25	PMOD
+by	by	IN	27	24	NMOD
+Giovanni	Giovanni	NP	28	30	VMOD
+Bellini	Bellini	NP	29	30	SBJ
+made	make	VVD	30	27	PMOD
+it	it	PP	31	32	SBJ
+worth	worth	JJ	32	30	OBJ
+the	the	DT	33	34	NMOD
+author	author	NN	34	36	NMOD
+'s	's	POS	35	34	NMOD
+while	while	NN	36	0	ROOT
+to	to	TO	37	38	VMOD
+write	write	VV	38	36	NMOD
+a	a	DT	39	41	NMOD
+preliminary	preliminary	JJ	40	41	NMOD
+note	note	NN	41	38	OBJ
+about	about	IN	42	41	NMOD
+difficulties	difficulty	NNS	43	42	PMOD
+of	of	IN	44	43	NMOD
+attribution	attribution	NN	45	44	PMOD
+:	:	:	46	8	P
+</s>
+<s>
+Is	be	VBZ	1	0	ROOT
+it	it	PP	2	1	SBJ
+Tuesday	Tuesday	NP	3	9	DEP
+between	between	IN	4	0	ROOT
+eleven	eleven	NN	5	8	NMOD
+o'clock	o'clock	RB	6	8	NMOD
+and	and	CC	7	6	CC
+noon	noon	NN	8	4	PMOD
+?	?	SENT	9	1	P
+</s>
+<s>
+The	the	DT	1	2	NMOD
+award	award	NN	2	8	SBJ
+winning	win	VVG	3	2	NMOD
+Cross	Cross	NP	4	6	NMOD
+Court	Court	NP	5	6	NMOD
+range	range	NN	6	3	OBJ
+now	now	RB	7	8	ADV
+features	feature	VVZ	8	0	ROOT
+a	a	DT	9	34	P
+Girls	Girls	NP	10	34	DEP
+Ultra	Ultra	NP	11	34	P
+Lo	Lo	NP	12	34	DEP
+TP	TP	NP	13	34	P
+and	and	CC	14	13	CC
+Girls	Girls	NP	15	34	DEP
+Ultra	Ultra	NP	16	34	P
+Cross	Cross	NP	17	34	DEP
+�	�	NP	18	34	P
+TP	TP	NP	19	34	DEP
+in	in	IN	20	34	P
+size	size	NN	21	34	DEP
+1�	1�	JJ	22	34	ADV
+,	,	,	23	34	P
+2	2	CD	24	34	DEP
+and	and	CC	25	34	P
+2�	2�	JJ	26	34	DEP
+--	--	:	27	34	DEP
+priced	price	VVN	28	0	ROOT
+at	at	IN	29	28	ADV
+�37.60	�37.60	NN	30	29	PMOD
+and	and	CC	31	30	CC
+�33.84	�33.84	NN	32	30	COORD
+respectively	respectively	RB	33	30	COORD
+.	.	SENT	34	8	P
+</s>
+<s>
+(	(	(	1	11	P
+a	a	DT	2	4	NMOD
+)	)	)	3	4	P
+references	reference	NNS	4	11	SBJ
+to	to	TO	5	4	NMOD
+signatures	signature	NNS	6	5	PMOD
+,	,	,	7	6	P
+inscription	inscription	NN	8	6	COORD
+and	and	CC	9	6	CC
+dates	date	NNS	10	6	COORD
+refer	refer	VVP	11	0	ROOT
+to	to	TO	12	11	ADV
+the	the	DT	13	15	NMOD
+present	present	JJ	14	15	NMOD
+state	state	NN	15	12	PMOD
+of	of	IN	16	15	NMOD
+the	the	DT	17	18	NMOD
+work	work	NN	18	16	PMOD
+;	;	:	19	11	P
+(	(	(	20	21	P
+b	b	LS	21	24	PRN
+)	)	)	22	21	P
+the	the	DT	23	24	NMOD
+term	term	NN	24	26	SBJ
+"	"	``	25	26	P
+bears	bear	VVZ	26	11	COORD
+a	a	DT	27	30	NMOD
+signature	signature	NN	28	30	NMOD
+"	"	''	29	30	P
+and/	and/	NN	30	26	OBJ
+or	or	CC	31	30	CC
+"	"	``	32	35	P
+date	date	NN	33	35	NMOD
+"	"	''	34	35	P
+and/	and/	NN	35	30	COORD
+or	or	CC	36	35	CC
+"	"	``	37	35	P
+inscription	inscription	NN	38	35	COORD
+"	"	''	39	35	P
+means	mean	VVZ	40	11	OBJ
+that	that	IN/that	41	57	VMOD
+in	in	IN	42	49	NMOD
+our	our	PP$	43	44	NMOD
+opinion	opinion	NN	44	42	PMOD
+the	the	DT	45	46	NMOD
+artist	artist	NN	46	49	NMOD
+'s	's	POS	47	46	NMOD
+name	name	NN	48	49	NMOD
+and/	and/	NN	49	57	SBJ
+or	or	CC	50	49	CC
+"	"	``	51	54	NMOD
+date	date	NN	52	54	NMOD
+"	"	''	53	54	P
+and/	and/	NN	54	49	COORD
+or	or	CC	55	49	CC
+inscription	inscription	NN	56	49	COORD
+have	have	VHP	57	11	ADV
+been	be	VBN	58	57	VC
+added	add	VVN	59	58	VC
+by	by	IN	60	59	LGS
+another	another	DT	61	62	NMOD
+hand	hand	NN	62	60	PMOD
+;	;	:	63	11	P
+(	(	(	64	65	P
+c	c	LS	65	68	PRN
+)	)	)	66	65	P
+the	the	DT	67	68	NMOD
+term	term	NN	68	72	NMOD
+"	"	``	69	72	P
+signed	sign	VVN	70	72	NMOD
+"	"	''	71	72	P
+and/	and/	NN	72	82	SBJ
+or	or	CC	73	72	CC
+"	"	``	74	77	P
+dated	dated	JJ	75	77	NMOD
+"	"	''	76	77	P
+and/	and/	NN	77	72	COORD
+or	or	CC	78	77	CC
+"	"	``	79	80	P
+inscribed	inscribe	VVN	80	77	COORD
+"	"	''	81	80	P
+means	mean	VVZ	82	11	COORD
+that	that	IN/that	83	82	ADV
+in	in	IN	84	82	ADV
+our	our	PP$	85	86	NMOD
+opinion	opinion	NN	86	84	PMOD
+the	the	DT	87	89	NMOD
+signature	signature	NN	88	89	NMOD
+and/	and/	NN	89	82	OBJ
+or	or	CC	90	89	CC
+date	date	NN	91	89	COORD
+and/	and/	NN	92	89	COORD
+or	or	CC	93	89	CC
+inscription	inscription	NN	94	89	COORD
+are	be	VBP	95	11	COORD
+from	from	IN	96	95	PRD
+the	the	DT	97	98	NMOD
+hand	hand	NN	98	96	PMOD
+of	of	IN	99	98	NMOD
+the	the	DT	100	101	NMOD
+artist	artist	NN	101	99	PMOD
+.	.	SENT	102	11	P
+</s>
+<s>
+You	you	PP	1	2	SBJ
+'ll	will	MD	2	0	ROOT
+find	find	VV	3	2	VC
+more	more	JJR	4	5	NMOD
+details	detail	NNS	5	3	OBJ
+of	of	IN	6	5	NMOD
+our	our	PP$	7	9	NMOD
+training	training	NN	8	9	NMOD
+options	option	NNS	9	6	PMOD
+on	on	IN	10	9	NMOD
+our	our	PP$	11	13	NMOD
+web	web	NN	12	13	NMOD
+site	site	NN	13	10	PMOD
+.	.	SENT	14	2	P
+</s>
+<s>
+I	I	PP	1	2	SBJ
+think	think	VVP	2	0	ROOT
+I	I	PP	3	4	SBJ
+would	would	MD	4	2	OBJ
+have	have	VH	5	4	VC
+said	say	VVD	6	5	VC
+well	well	RB	7	6	ADV
+ok	ok	VV	8	6	VC
+then	then	RB	9	8	ADV
+I	I	PP	10	11	SBJ
+'ll	will	MD	11	8	OBJ
+have	have	VH	12	11	VC
+the	the	DT	13	14	NMOD
+hour	hour	NN	14	12	OBJ
+for	for	IN	15	14	NMOD
+the	the	DT	16	19	VMOD
+PA	Pa	NP	17	19	SBJ
+to	to	TO	18	19	VMOD
+take	take	VV	19	12	ADV
+me	me	PP	20	19	OBJ
+for	for	IN	21	19	ADV
+a	a	DT	22	33	DEP
+Caffe	Caffe	NP	23	33	P
+Latte	Latte	NP	24	33	DEP
+at	at	IN	25	0	ROOT
+the	the	DT	26	28	NMOD
+supermarket	supermarket	NN	27	28	NMOD
+cafe	cafe	NN	28	25	PMOD
+so	so	IN	29	31	VMOD
+I	I	PP	30	31	SBJ
+can	can	MD	31	0	ROOT
+socialise	socialise	VV	32	31	VC
+!	!	SENT	33	2	P
+</s>
+</text>

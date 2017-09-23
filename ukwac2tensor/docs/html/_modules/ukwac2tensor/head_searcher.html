@@ -1,0 +1,1135 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ukwac2tensor.head_searcher &mdash; ukwac2tensor 0.0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="ukwac2tensor 0.0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> ukwac2tensor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Howto</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ukwac2tensor.html">ukwac2tensor scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../output.html">Output description</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">ukwac2tensor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>ukwac2tensor.head_searcher</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for ukwac2tensor.head_searcher</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python2</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">SENNA role labeler does not provide head detection functionality.</span>
+<span class="sd">This script attempts to find phrase head using the results of Malt parser and</span>
+<span class="sd">some additional heuristics heavily influenced by Magerman&#39;s head percolation</span>
+<span class="sd">table.</span>
+<span class="sd">We implement an algorithm which is applied on SENNA processed files which we</span>
+<span class="sd">afterwards converted into xml format.</span>
+<span class="sd">The algorithm consists of **three** major stages or fallback strategies</span>
+<span class="sd">arbitrary called MALT, MALT_SPAN and LINEAR. The fallback strategies are</span>
+<span class="sd">**applied sequentially** until the phrase head is found. Such a 3-step approach</span>
+<span class="sd">allows us to achieve 90% head recall on the whole corpus. Intuitively, we give</span>
+<span class="sd">preference to the output produced by Malt parser as opposed to linear head</span>
+<span class="sd">search.</span>
+
+<span class="sd">.. figure::  images/head_searcher.png</span>
+<span class="sd">   :align:   center</span>
+<span class="sd">   :scale: 85%</span>
+
+<span class="sd">   execution diagram</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">gzip</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">xml.etree.ElementTree</span> <span class="k">as</span> <span class="nn">et</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">subprocess</span> <span class="k">as</span> <span class="nn">sb</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">string</span> <span class="k">import</span> <span class="n">punctuation</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">deque</span><span class="p">,</span> <span class="n">OrderedDict</span> <span class="k">as</span> <span class="n">od</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;p.shkadzko@gmail.com&quot;</span>
+
+
+<span class="c1">### uncomment below to generate script execution .png graph</span>
+<span class="c1"># from pycallgraph import PyCallGraph</span>
+<span class="c1"># from pycallgraph.output import GraphvizOutput</span>
+
+
+<div class="viewcode-block" id="_globals_init"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher._globals_init">[docs]</a><span class="k">def</span> <span class="nf">_globals_init</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initialize global list of algorithm names.</span>
+<span class="sd">    &lt;This function is used only by unittest scripts&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">ALGS</span>
+    <span class="n">ALGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MALT&#39;</span><span class="p">,</span> <span class="s1">&#39;MALT_SPAN&#39;</span><span class="p">,</span> <span class="s1">&#39;LINEAR&#39;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Linear"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.Linear">[docs]</a><span class="k">class</span> <span class="nc">Linear</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class that implements LINEAR strategy.</span>
+<span class="sd">    LINEAR strategy is triggered when MALT and MALT_SPAN fail or explicitly</span>
+<span class="sd">    with ``-a LINEAR`` option. The key idea here is to return the last token</span>
+<span class="sd">    in the stack.</span>
+<span class="sd">    For example, for *“against the twilight redness of the bay”* node we first</span>
+<span class="sd">    check if it is an adverbial phrase, if it is, the strategy returns the</span>
+<span class="sd">    first VBG|VBZ|VBN, NN or RB token.</span>
+<span class="sd">    If there are several such tokens, VBG|VBZ|VBN has the highest and RB the</span>
+<span class="sd">    lowest priority. For example, VBG|VBZ|VBN will be returned if it precedes</span>
+<span class="sd">    NN|RB and NN will be returned if it precedes RB accordingly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Linear.run"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.Linear.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">tup_arg</span><span class="p">,</span> <span class="n">deptype</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run LINEAR algorithm.</span>
+<span class="sd">        Decide whether to call AP or NP head searching heuristics.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            | *tup_arg* (tuple) -- tuples of arguments:</span>
+<span class="sd">               ``(&#39;reading&#39;, &#39;nnp&#39;, &#39;26&#39;), (&#39;festival&#39;, &#39;nnp&#39;, &#39;27&#39;)``</span>
+<span class="sd">            | *deptype* (str) -- dependency type</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *found head with POS-tag and position index* ``tower/NNS/12`` and</span>
+<span class="sd">            the algorithm name</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># if AdvP phrase</span>
+        <span class="c1"># TODO add A1, A2 in future</span>
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">r&#39;MNR|TMP|ADV&#39;</span><span class="p">,</span> <span class="n">deptype</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span>
+            <span class="c1"># if &#39;RB|VBG|VBZ&#39; POS-tags exist</span>
+            <span class="k">if</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">r&#39;RB|VBG|VBZ|VBN&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">),</span>
+                      <span class="n">tup_arg</span><span class="p">):</span>  <span class="c1"># TIP: JJ not included</span>
+                <span class="k">return</span> <span class="n">Linear</span><span class="o">.</span><span class="n">_get_ap_head</span><span class="p">(</span><span class="n">tup_arg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Linear</span><span class="o">.</span><span class="n">_get_np_head</span><span class="p">(</span><span class="n">tup_arg</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Linear._get_ap_head"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.Linear._get_ap_head">[docs]</a>    <span class="k">def</span> <span class="nf">_get_ap_head</span><span class="p">(</span><span class="n">tups</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find an appropriate AP head (RB|VBG) for the role types: ADV, MNR, TMP.</span>
+<span class="sd">        Return last VBG, NN or RB. Head priority -- VBG &gt; NN &gt; RB.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *tups* (tuple) -- tuples of arguments:</span>
+<span class="sd">             ``(&#39;reading&#39;, &#39;nnp&#39;, &#39;26&#39;), (&#39;festival&#39;, &#39;nnp&#39;, &#39;27&#39;)``</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *found head with POS-tag and position index* ``tower/NNS/12`` and</span>
+<span class="sd">            the algorithm name</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">tups</span><span class="p">)]):</span>
+            <span class="c1"># VBG takes over all if last</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">r&#39;VBG|VBZ|VBN&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">word</span><span class="p">),</span> <span class="s1">&#39;LINEAR&#39;</span>
+            <span class="c1"># NN takes over RB if last</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">r&#39;NN&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">word</span><span class="p">),</span> <span class="s1">&#39;LINEAR&#39;</span>
+            <span class="c1"># Last RB is the head</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">r&#39;RB&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">word</span><span class="p">),</span> <span class="s1">&#39;LINEAR&#39;</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Linear._get_np_head"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.Linear._get_np_head">[docs]</a>    <span class="k">def</span> <span class="nf">_get_np_head</span><span class="p">(</span><span class="n">tups</span><span class="p">,</span> <span class="n">np</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Implement Magerman&#39;s table inspired rules to search for phrase heads.</span>
+
+<span class="sd">        Example phrase: *“against the twilight redness of the bay”*</span>
+
+<span class="sd">        Iterate over each token and check if it is a member of</span>
+<span class="sd">        NN|NNS|NNP|NNPS|VBG list, if it is, pop (if stack is not empty) and</span>
+<span class="sd">        push the current token to the stack. In such manner iterate over all</span>
+<span class="sd">        tokens in the node and return the last element on the stack in the end.</span>
+<span class="sd">        When encounter a token outside of the list, break the iteration but</span>
+<span class="sd">        only if we have already pushed once and return whatever is on the</span>
+<span class="sd">        stack.</span>
+
+<span class="sd">        Suppose we encounter a possessive, we do not break the iteration in</span>
+<span class="sd">        that case but continue, we push the next token after the possessive</span>
+<span class="sd">        and return it in the end. Applying this algorithm to the</span>
+<span class="sd">        example phrase above we find *“redness”* to be the phrase head.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *tups* (tuple) -- tuples of arguments</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *found head with POS-tag and position index* ``tower/NNS/12`` and</span>
+<span class="sd">            the algorithm name</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># NP head searching FSA</span>
+        <span class="n">postag</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;NN|NNS|NNP|NNPS|VBG&#39;</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">)</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="n">deque</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">tups</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">postag</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">word</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                    <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+                    <span class="n">np</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">r&#39;PRP$&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span>
+                    <span class="c1"># no head found but we return single prp</span>
+                    <span class="k">return</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">word</span><span class="p">),</span> <span class="s1">&#39;LINEAR&#39;</span>
+            <span class="k">if</span> <span class="n">np</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">postag</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">word</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                    <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                    <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">r&#39;POS&#39;</span><span class="p">,</span> <span class="n">word</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span>
+                    <span class="n">np</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">break</span>
+        <span class="k">if</span> <span class="n">stack</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="s1">&#39;LINEAR&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># head was not found</span></div></div>
+
+
+<div class="viewcode-block" id="MaltSpan"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.MaltSpan">[docs]</a><span class="k">class</span> <span class="nc">MaltSpan</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MALT_SPAN strategy implementation.</span>
+
+<span class="sd">    Attempt to find malt head when MALT index search fails.</span>
+<span class="sd">    Search for the token with the lowest positional index within Malt</span>
+<span class="sd">    tokens **block**, which is the size of the SENNA node. If token</span>
+<span class="sd">    position with the lowest index is in a list of allowed heads, accept it</span>
+<span class="sd">    as NP head. If there are several tokens with the same index, fall back</span>
+<span class="sd">    to LINEAR.</span>
+<span class="sd">    &lt;If this is too confusing, see first the input xml file and find</span>
+<span class="sd">    ``&lt;malt&gt;&lt;/malt&gt;`` tags. Then examine the example below.&gt;</span>
+
+<span class="sd">    Malt block::</span>
+
+<span class="sd">          back rb 19 16 adv</span>
+<span class="sd">          onto in 20 19 amod</span>
+<span class="sd">          the dt 21 23 nmod</span>
+<span class="sd">          shareholding nn 22 23 nmod</span>
+<span class="sd">          register nns 23 20 pmod &lt;-- lowest pos index 20</span>
+
+<span class="sd">    SENNA node::</span>
+
+<span class="sd">        &lt;dep type=&quot;A2&quot;&gt;</span>
+<span class="sd">            back/RB/19 onto/IN/20 the/DT/21 shareholding/NN/22 register/NNS/23</span>
+<span class="sd">        &lt;/dep&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="MaltSpan.run"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.MaltSpan.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">tups</span><span class="p">,</span> <span class="n">remapped</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run MALT_SPAN algorithm.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            | *tups* (tuple) -- tuples of arguments</span>
+<span class="sd">            | *remapped* (OrderedDict) -- a mapping of SENNA to Malt tokens</span>
+<span class="sd">            | ``((&#39;the&#39;, 1), (&#39;dt&#39;, &#39;1&#39;, &#39;39&#39;)),``</span>
+<span class="sd">            | ``((&#39;rolling&#39;, 2), (&#39;np&#39;, &#39;2&#39;, &#39;39&#39;)),``</span>
+<span class="sd">            | ``((&#39;stones&#39;, 3), (&#39;np&#39;, &#39;3&#39;, &#39;39&#39;))``</span>
+<span class="sd">            | ``(&#39;the&#39;, 1)`` is SENNA token and its index</span>
+<span class="sd">            | ``(&#39;dt&#39;, &#39;1&#39;, &#39;39&#39;)`` is Malt data</span>
+<span class="sd">            | ``dt`` is Malt defined POS-tag for &quot;the&quot;.</span>
+<span class="sd">            | ``1`` is the token index.</span>
+<span class="sd">            | ``39`` is the index of &quot;the&quot; governor (dependency link).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *found head with POS-tag and position index* ``tower/NNS/12`` and</span>
+<span class="sd">            the algorithm name</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">allowed_heads</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;nn&#39;</span><span class="p">,</span> <span class="s1">&#39;nns&#39;</span><span class="p">,</span> <span class="s1">&#39;np&#39;</span><span class="p">,</span> <span class="s1">&#39;nps&#39;</span><span class="p">,</span> <span class="s1">&#39;vbg&#39;</span><span class="p">,</span> <span class="s1">&#39;vbn&#39;</span><span class="p">,</span> <span class="s1">&#39;vvp&#39;</span><span class="p">]</span>
+        <span class="n">new_args</span> <span class="o">=</span> <span class="p">[(</span><span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">tups</span><span class="p">]</span>
+        <span class="n">tupargs_dup</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(((</span><span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])),</span> <span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">tups</span><span class="p">)</span>
+        <span class="n">itremapped</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">remapped</span><span class="p">)</span>
+        <span class="n">remapped_copy</span> <span class="o">=</span> <span class="n">remapped</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">itremapped</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_args</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">remapped_copy</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">remapped_copy</span><span class="p">:</span>
+            <span class="c1"># we shall not guess the head if no lowest index can be found</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">remapped_copy</span><span class="o">.</span><span class="n">values</span><span class="p">()]))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">head</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([(</span><span class="n">k</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">remapped_copy</span><span class="o">.</span><span class="n">items</span><span class="p">()],</span>
+                           <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">tuparg_head</span> <span class="o">=</span> <span class="n">tupargs_dup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">head</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">tuparg_head</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">allowed_heads</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tuparg_head</span><span class="p">),</span> <span class="s1">&#39;MALT_SPAN&#39;</span>
+        <span class="k">return</span> <span class="kc">None</span></div></div>
+
+
+<div class="viewcode-block" id="Malt"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.Malt">[docs]</a><span class="k">class</span> <span class="nc">Malt</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MALT strategy implementation.</span>
+<span class="sd">    In order to find the phrase head we analyze the results produced by</span>
+<span class="sd">    Malt parser and SENNA. When SENNA processes the sentence it returns its</span>
+<span class="sd">    governors and their dependents which we concatenate into role nodes.</span>
+<span class="sd">    For example:</span>
+<span class="sd">    *“Meg stood in the garden doorway , her small figure silhouetted against</span>
+<span class="sd">    the twilight redness of the bay .”*</span>
+
+<span class="sd">    The sentence above will have *“stand”* and *“silhouetted”* as governors</span>
+<span class="sd">    where *“Meg”*, *“in the garden doorway”* shall be the role nodes of</span>
+<span class="sd">    *“stand”* and *“her small figure”*, *“against the twilight redness of the</span>
+<span class="sd">    bay”* shall be the role nodes of *“silhouetted”*.</span>
+<span class="sd">    In addition to the information above we also have the following Malt parser</span>
+<span class="sd">    output::</span>
+
+<span class="sd">        token      POS-tag index depend role</span>
+<span class="sd">        meg        np      1     2      sbj</span>
+<span class="sd">        stand      vvd     2     0      root</span>
+<span class="sd">        in         in      3     2      adv</span>
+<span class="sd">        the        dt      4     6      nmod</span>
+<span class="sd">        garden     nn      5     6      nmod</span>
+<span class="sd">        doorway    nn      6     3      pmod</span>
+<span class="sd">        ,          ,       7     11     p</span>
+<span class="sd">        her        pp$     8     10     nmod</span>
+<span class="sd">        small      jj      9     10     nmod</span>
+<span class="sd">        figure     nn      10    11     sbj</span>
+<span class="sd">        silhouette vvn     11    2      prn</span>
+<span class="sd">        against    in      12    11     adv</span>
+<span class="sd">        the        dt      13    15     nmod</span>
+<span class="sd">        twilight   nn      14    15     nmod</span>
+<span class="sd">        redness    nn      15    12     pmod</span>
+<span class="sd">        of         in      16    15     nmod</span>
+<span class="sd">        the        dt      17    18     nmod</span>
+<span class="sd">        bay        nn      18    16     pmod</span>
+<span class="sd">        .          sent    19    2      p</span>
+
+<span class="sd">    The above example is retrieved from ``&lt;malt&gt;&lt;/malt&gt;`` elements in xml.</span>
+<span class="sd">    In particular, we need to find the heads of the following three phrases:</span>
+<span class="sd">    | *“in the garden doorway”*</span>
+<span class="sd">    | *“her small figure”*</span>
+<span class="sd">    | *“against the twilight redness of the bay”*</span>
+
+<span class="sd">    This is done by finding SENNA&#39;s governor in Malt parser output, governor&#39;s</span>
+<span class="sd">    immediate dependents and comparing them with the tokens from SENNA&#39;s role</span>
+<span class="sd">    nodes.</span>
+<span class="sd">    For our example the immediate dependents of *“stand”* are *“silhouette”*,</span>
+<span class="sd">    *“in”* and the immediate dependents of *“silhouette”* are *“ , ”*,</span>
+<span class="sd">    *“against”*, *“figure”*. These dependents (except *“ , ”*) are all present</span>
+<span class="sd">    in the role nodes *“in the garden doorway”*, *“her small figure”*,</span>
+<span class="sd">    *“against the twilight redness of the bay”* but not all of them are of</span>
+<span class="sd">    interest to us. In particular we do not want to see prepositions as phrase</span>
+<span class="sd">    heads, therefore the strategy skips them and returns the immediate</span>
+<span class="sd">    dependents of the prepositions that are *“doorway”* for *“in”* and</span>
+<span class="sd">    *“redness”* for *“against”*. Similarly, we skip any modal verbs and attempt</span>
+<span class="sd">    to return their dependents as potential head candidates. If the phrase head</span>
+<span class="sd">    is not a noun, verb or pronoun it is not accepted and the strategy falls</span>
+<span class="sd">    back to the next searching strategy.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Malt.run"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.Malt.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">tups</span><span class="p">,</span> <span class="n">remapped</span><span class="p">,</span> <span class="n">deptype</span><span class="p">,</span> <span class="n">govs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use preprocessed malt data to find a tuple head. If the head can not be</span>
+<span class="sd">        found fall back to head finding algorithm.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            | *tups* (tuple) -- tuples of arguments</span>
+<span class="sd">            | *remapped* (OrderedDict) -- a mapping of SENNA to Malt tokens</span>
+<span class="sd">            | *deptype* (str) -- dependency type</span>
+<span class="sd">            | *govs* (list) -- a list of governor tuples</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *found head with POS-tag and position index* ``tower/NNS/12`` and</span>
+<span class="sd">            the algorithm name</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># creating a dict where {SENNA index: (MALT token, MALT index)}</span>
+        <span class="n">depdic</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">remapped</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">updated_govs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Malt</span><span class="o">.</span><span class="n">_get_token_malt_idx</span><span class="p">(</span><span class="n">remapped</span><span class="p">,</span> <span class="n">depdic</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">govs</span> <span class="k">if</span> <span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">punctuation</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">updated_govs</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">updated_govs</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">updated_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">Malt</span><span class="o">.</span><span class="n">_get_token_malt_idx</span><span class="p">(</span><span class="n">remapped</span><span class="p">,</span> <span class="n">depdic</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">tups</span> <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">punctuation</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">updated_args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">arg</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">gov</span> <span class="ow">in</span> <span class="n">updated_govs</span><span class="p">:</span>
+                <span class="c1"># ((&#39;take&#39;, &#39;VBmd&#39;), &#39;5&#39;, &#39;4&#39;)</span>
+                <span class="k">if</span> <span class="n">gov</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">==</span> <span class="s1">&#39;md&#39;</span><span class="p">:</span>
+                    <span class="c1"># we check gov[-1] in case it points to md</span>
+                    <span class="k">if</span> <span class="n">arg</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">gov</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                        <span class="n">head</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="k">break</span>
+                <span class="k">elif</span> <span class="n">gov</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">==</span> <span class="s1">&#39;be&#39;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">arg</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">gov</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                        <span class="n">head</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="k">break</span>
+                <span class="k">elif</span> <span class="n">arg</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">gov</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">head</span> <span class="o">=</span> <span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">break</span>
+        <span class="c1"># if head is prep skip and search for next head</span>
+        <span class="k">if</span> <span class="n">head</span> <span class="ow">and</span> <span class="n">head</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;in&#39;</span><span class="p">,</span> <span class="s1">&#39;to&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">Malt</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tups</span><span class="p">,</span> <span class="n">remapped</span><span class="p">,</span> <span class="n">deptype</span><span class="p">,</span> <span class="p">(</span><span class="n">head</span><span class="p">,))</span>
+        <span class="k">if</span> <span class="n">head</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">head</span><span class="p">),</span> <span class="s1">&#39;MALT&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Malt._get_token_malt_idx"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.Malt._get_token_malt_idx">[docs]</a>    <span class="k">def</span> <span class="nf">_get_token_malt_idx</span><span class="p">(</span><span class="n">malt_map</span><span class="p">,</span> <span class="n">depdic</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">isgov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Attempt to find a corresponding token in malt parse and replace the</span>
+<span class="sd">        ukwac index with Malt index. Use mapping dict to lookup Malt indeces</span>
+<span class="sd">        and return SENNA token with Malt index.</span>
+
+<span class="sd">        &lt;There are couple of corrections I make due to MALT &lt;&gt; SENNA parse</span>
+<span class="sd">        differences. I am checking whether a verb has any ``md``, ``vbz``,</span>
+<span class="sd">        ``vhz`` etc. parents. If it does, I mark this verb so that later we</span>
+<span class="sd">        could correctly identify the true parent for current token.</span>
+<span class="sd">        Here is an example of Malt output to understand better what I mean::</span>
+
+<span class="sd">            she pp 1 2 sbj --&gt;</span>
+<span class="sd">            could md 2 0 root &lt;--</span>
+<span class="sd">            see vv 3 2 vc</span>
+
+<span class="sd">        Notice how *&quot;she&quot;* points to ``md`` parent in MALT (while SENNA will</span>
+<span class="sd">        have *&quot;see&quot;* as a parent).</span>
+
+<span class="sd">        Another example (malt output)::</span>
+
+<span class="sd">            the dt 1 2 nmod</span>
+<span class="sd">            bird nn 2 3 sbj --&gt;</span>
+<span class="sd">            be vbd 3 0 root &lt;--</span>
+<span class="sd">            go vvn 4 3 vc</span>
+<span class="sd">            . sent 5 3 p</span>
+
+<span class="sd">        Notice how *&quot;bird&quot;* points to ``vbd`` instead of *&quot;go&quot;*.</span>
+<span class="sd">        This is not the only MALT &lt;&gt; SENNA parse difference, but one which</span>
+<span class="sd">        requires separate handling. I have created unit-tests for such cases.</span>
+<span class="sd">        Please run unit-tests each time after you change anything.&gt;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            | *malt_map* (OrderedDict) -- a mapping of SENNA to MALT tokens</span>
+<span class="sd">            | *depdic* (dict) -- a mapping from SENNA index to MALT index, tag</span>
+<span class="sd">            | *token* (tuple) -- SENNA tuple (&#39;settle&#39;, &#39;VB&#39;, &#39;4&#39;), which is</span>
+<span class="sd">               used to get MALT values from *malt_map*</span>
+<span class="sd">            | *isgov* (bool) -- True, if token is a governor and should be</span>
+<span class="sd">               handled in a special way</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            a tuple of SENNA and Malt token indeces where ``37`` corresponds to</span>
+<span class="sd">            Malt token index and ``35`` points to the token&#39;s governor::</span>
+
+<span class="sd">                ((&#39;like&#39;, &#39;VBD&#39;, &#39;36&#39;), &#39;37&#39;, &#39;35&#39;)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lookup_token</span> <span class="o">=</span> <span class="p">(</span><span class="n">token</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">token</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="n">senna_postag</span> <span class="o">=</span> <span class="n">token</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">malt_value</span> <span class="o">=</span> <span class="n">malt_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">lookup_token</span><span class="p">)</span>
+        <span class="c1"># if token is not in remapped_malt then malt &lt;&gt; senna tagging</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">malt_value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="c1"># checking if vv has any md parents, because MALT makes md root</span>
+        <span class="k">if</span> <span class="n">isgov</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">malt_value</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;0&#39;</span> <span class="ow">and</span> <span class="n">malt_value</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;v&#39;</span><span class="p">:</span>
+                <span class="c1"># if here is md 0 then we update vv</span>
+                <span class="k">if</span> <span class="n">depdic</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">malt_value</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="p">(</span><span class="s1">&#39;md&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">):</span>
+                    <span class="c1"># (&#39;take&#39;, &#39;VBmd&#39;, &#39;5&#39;, &#39;4&#39;) where 4 points to md parent</span>
+                    <span class="n">token</span> <span class="o">=</span> <span class="n">token</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">token</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;md&#39;</span>  <span class="c1"># marking the token</span>
+                <span class="c1"># if we find that vv has a [&quot;be&quot;, &quot;have&quot;] 0 root we update vv</span>
+                <span class="n">behave</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;vbz&#39;</span><span class="p">,</span> <span class="s1">&#39;vbd&#39;</span><span class="p">,</span> <span class="s1">&#39;vbp&#39;</span><span class="p">,</span> <span class="s1">&#39;vhz&#39;</span><span class="p">,</span> <span class="s1">&#39;vhd&#39;</span><span class="p">,</span> <span class="s1">&#39;vhp&#39;</span><span class="p">]</span>
+                <span class="n">parent</span> <span class="o">=</span> <span class="n">depdic</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">malt_value</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">parent</span> <span class="ow">and</span> <span class="n">parent</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">behave</span> <span class="ow">and</span> <span class="n">parent</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;0&#39;</span><span class="p">:</span>
+                    <span class="n">token</span> <span class="o">=</span> <span class="n">token</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">token</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;be&#39;</span>  <span class="c1"># marking the token</span>
+        <span class="c1"># checking POS-tag equality,</span>
+        <span class="c1"># this is necessary to be sure that correct tokens are merged</span>
+        <span class="k">if</span> <span class="n">senna_postag</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">malt_value</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>  <span class="c1"># &#39;vb&#39; == (&#39;vbn&#39;, 1, 0)</span>
+            <span class="k">return</span> <span class="n">token</span><span class="p">,</span> <span class="n">malt_value</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">malt_value</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">senna_postag</span> <span class="o">==</span> <span class="s1">&#39;.&#39;</span> <span class="ow">and</span> <span class="n">malt_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;sent&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">token</span><span class="p">,</span> <span class="n">malt_value</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">malt_value</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">senna_postag</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;cd&#39;</span><span class="p">,</span> <span class="s1">&#39;nn&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">malt_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ls&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">token</span><span class="p">,</span> <span class="n">malt_value</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">malt_value</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="read_result_xml"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.read_result_xml">[docs]</a><span class="k">def</span> <span class="nf">read_result_xml</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read xml file and return xml.etree object</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        *fname* (str) -- file name</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        *etrees* (xml.etree) -- xml representation of file contents</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">rewrite_orig</span><span class="p">(</span><span class="n">etr_line</span><span class="p">,</span><span class="n">erase</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="c1"># rewrite the original file without malt block,lemsent and rawsent</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">etr_line</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">etr_line</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="c1"># parse xml file</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">fdata</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">fdata</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">etrees</span> <span class="o">=</span> <span class="n">od</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">sent</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fdata</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sent</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">continue</span>
+        <span class="n">etrees</span><span class="p">[</span><span class="n">sent</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">sent</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># we need to remove &quot;lemsent&quot;,&quot;rawsent&quot; and &quot;malt&quot; from input file</span>
+    <span class="c1"># erase orig file</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="n">etrees_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">etrees</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">etr</span> <span class="ow">in</span> <span class="n">etrees_copy</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="c1"># removing &lt;malt&gt; block</span>
+        <span class="n">malt_element</span> <span class="o">=</span> <span class="n">etr</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;malt&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">malt_element</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">etr</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">malt_element</span><span class="p">)</span>
+        <span class="c1"># removing &lt;rawsent&gt; and &lt;lemsent&gt;</span>
+        <span class="n">rawsent</span> <span class="o">=</span> <span class="n">etr</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;rawsent&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rawsent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">etr</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">rawsent</span><span class="p">)</span>
+        <span class="n">lemsent</span> <span class="o">=</span> <span class="n">etr</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;lemsent&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">lemsent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">etr</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">lemsent</span><span class="p">)</span>
+        <span class="n">etr_str</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">etr</span><span class="p">)</span>
+        <span class="n">rewrite_orig</span><span class="p">(</span><span class="n">etr_str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">etrees</span></div>
+
+
+<div class="viewcode-block" id="map_to_malt_indexes"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.map_to_malt_indexes">[docs]</a><span class="k">def</span> <span class="nf">map_to_malt_indexes</span><span class="p">(</span><span class="n">lemsent</span><span class="p">,</span> <span class="n">maltdata</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assign Malt block indexing to ``&lt;lemsent&gt;`` tokens, because ``&lt;lemsent&gt;``</span>
+<span class="sd">    number of tokens can and is often different from Malt&#39;s.</span>
+
+<span class="sd">    &lt;If we do not do this line rearrangement, we won&#39;t be able to make use of</span>
+<span class="sd">    Malt block in our xml input file. Malt block contains **dependent -&gt;</span>
+<span class="sd">    governor** indeces that we use to find a phrase head.&gt;</span>
+
+<span class="sd">    &lt;Maltdata shall have all non-normalized contractions of malt parse which,</span>
+<span class="sd">    in case of SENNA&#39;s output, are removed by ``reduce_contractions`` function</span>
+<span class="sd">    from **ukwac_converter.py** script and therefore do not get into</span>
+<span class="sd">    ``lemsent``. This is also one of the reasons for SENNA - Malt index</span>
+<span class="sd">    differences.&gt;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        | *lemsent* (str) -- a string from ``&lt;lemsent&gt;&lt;/lemsent&gt;``</span>
+<span class="sd">        | *maltdata* (str) -- a string from ``&lt;malt&gt;&lt;/malt&gt;``</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        | *result* (OrderedDict) -- a mapping between SENNA&#39;s tokens and Malt</span>
+<span class="sd">          block, where first tuple is SENNA&#39;s ``(token, index)`` and second</span>
+<span class="sd">          tuple is Malt&#39;s ``(&#39;POS-tag&#39;, &quot;token&#39;s position&quot;, &quot;token&#39;s governor</span>
+<span class="sd">          position&quot;)``::</span>
+
+<span class="sd">            [((&#39;the&#39;, 1), (&#39;dt&#39;, &#39;1&#39;, &#39;39&#39;)),</span>
+<span class="sd">            ((&#39;rolling&#39;, 2), (&#39;np&#39;, &#39;3&#39;, &#39;39&#39;)),</span>
+<span class="sd">            ((&#39;stones&#39;, 3), (&#39;np&#39;, &#39;4&#39;, &#39;39&#39;)),]</span>
+
+<span class="sd">        &lt;The above example does not show any difference between SENNA and Malt</span>
+<span class="sd">        indeces, however in many cases Malt index shall be different.&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">line_rearrange</span><span class="p">(</span><span class="n">ml</span><span class="p">,</span> <span class="n">ll</span><span class="p">,</span> <span class="n">mi</span><span class="p">,</span> <span class="n">li</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fix line discrepancies between SENNA and Malt data.</span>
+<span class="sd">        Iterate over SENNA&#39;s tokens and attempt to find idential tokens in</span>
+<span class="sd">        Malt block.</span>
+
+<span class="sd">        &lt;This function was basically created by &quot;trial and error&quot; and it is</span>
+<span class="sd">        highly obscure. The idea here is to iteratively search over SENNA or</span>
+<span class="sd">        Malt lines looking for correct match. It involves a series of string</span>
+<span class="sd">        checks (first strict ones like **full string match**, then</span>
+<span class="sd">        ``startswith``, then **3 first chars only** in order to find the</span>
+<span class="sd">        &quot;perfect&quot; match). Keep in mind that if you decide to change anything,</span>
+<span class="sd">        do run unittests (and even unittests won&#39;t give you 100% guarantee:).</span>
+<span class="sd">        This algorithm is very fragile.&gt;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            | *ml* (list) -- a list of Malt block elements.</span>
+<span class="sd">              Example: ``[&#39;you&#39;, &#39;pp&#39;, &#39;34&#39;, &#39;35&#39;, &#39;sbj&#39;]``</span>
+<span class="sd">            | *ll* (tuple) -- a tuple of SENNA&#39;s token and its index as</span>
+<span class="sd">              retrieved from ``&lt;lemsent&gt;&lt;/lemsent&gt;``.</span>
+<span class="sd">              Example: ``(&quot;you&#39;ve&quot;, 34)``</span>
+<span class="sd">            | *mi* (str) -- Malt (``&lt;malt&gt;&lt;/malt&gt;``) block index</span>
+<span class="sd">            | *li* (str) -- SENNA (``&lt;lemsent&gt;&lt;/lemsent&gt;``) index</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *a tuple* with rearranged indeces.</span>
+<span class="sd">            Example: ``((&#39;always&#39;, 35), &#39;rb&#39;, &#39;36&#39;, &#39;35&#39;, 35, 34)``</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># DRAGONS AHEAD!</span>
+        <span class="c1"># adding mismatched word before iteration</span>
+        <span class="c1"># when token diff falls on the last token</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">malt_lst</span><span class="p">)</span> <span class="o">==</span> <span class="n">mi</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">malt_lst</span><span class="p">)</span> <span class="o">==</span> <span class="n">mi</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ll</span><span class="p">,</span> <span class="n">ml</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">mi</span><span class="p">,</span> <span class="n">li</span>
+        <span class="c1"># when token diff falls on the last token</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lemsent_lst</span><span class="p">)</span> <span class="o">==</span> <span class="n">li</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">lemsent_lst</span><span class="p">)</span> <span class="o">==</span> <span class="n">li</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ll</span><span class="p">,</span> <span class="n">ml</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">mi</span><span class="p">,</span> <span class="n">li</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">ll</span><span class="p">]</span> <span class="o">=</span> <span class="n">ml</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">itermalt</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">iterlem</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">ml</span> <span class="o">=</span> <span class="n">malt_lst</span><span class="p">[</span><span class="n">mi</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="n">ll</span> <span class="o">=</span> <span class="n">lemsent_lst</span><span class="p">[</span><span class="n">li</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">ml</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">ll</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="n">ll</span><span class="p">,</span> <span class="n">ml</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">mi</span><span class="p">,</span> <span class="n">li</span>
+            <span class="k">elif</span> <span class="n">ml</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">ll</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">iterlem</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">mi</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">li</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">ll</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">ml</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">itermalt</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">mi</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">li</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="c1"># we need to check also &#39;give&#39;&lt;&gt;&#39;giving&#39; diffs, match first 3 chars</span>
+            <span class="k">elif</span> <span class="n">ml</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="n">ll</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="mi">3</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="n">ll</span><span class="p">,</span> <span class="n">ml</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">mi</span><span class="p">,</span> <span class="n">li</span>
+            <span class="k">elif</span> <span class="n">iterlem</span><span class="p">:</span>
+                <span class="n">li</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">itermalt</span><span class="p">:</span>
+                <span class="n">mi</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">ml</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">ll</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">ll</span><span class="p">]</span> <span class="o">=</span> <span class="n">ml</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+                <span class="n">mi</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">li</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">ml</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ll</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">iterlem</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">mi</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">li</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">ml</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ll</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">itermalt</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">mi</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">li</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            &lt;Surprise! SENNA can randomly split a sentence in halves, then</span>
+<span class="sd">            ``li`` will exceed ``lemsent_lst`` and iteration stops. It may not</span>
+<span class="sd">            happen in this loop however and that is why here in the end I</span>
+<span class="sd">            explicitly check the last elements of ``malt_lst`` to see if</span>
+<span class="sd">            the sent was actually a splitted part. I return ``(&#39;BROKEN&#39;)`` so</span>
+<span class="sd">            that ``line_rearrange`` knows the sentence was cut off.&gt;</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">li</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">lemsent_lst</span><span class="p">)</span> <span class="ow">and</span> <span class="n">li</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">malt_lst</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;BROKEN&#39;</span><span class="p">,)</span>  <span class="c1"># sentence was broken</span>
+            <span class="c1"># if reached end of either of lists returning current line</span>
+            <span class="k">if</span> <span class="n">mi</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">malt_lst</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">ll</span><span class="p">,</span> <span class="n">ml</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">mi</span><span class="p">,</span> <span class="n">li</span>
+            <span class="k">if</span> <span class="n">li</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">lemsent_lst</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">ll</span><span class="p">,</span> <span class="n">ml</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ml</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">mi</span><span class="p">,</span> <span class="n">li</span>
+
+    <span class="k">global</span> <span class="n">WASBROKEN</span>
+    <span class="k">global</span> <span class="n">STARTFROM</span>
+    <span class="k">global</span> <span class="n">PREV_MALT</span>
+    <span class="n">maltdata</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">r&quot;n&#39;t&quot;</span><span class="p">,</span> <span class="s2">&quot;not&quot;</span><span class="p">,</span> <span class="n">maltdata</span><span class="p">)</span>  <span class="c1"># replace &quot;n&#39;t&quot; with &quot;not&quot;</span>
+    <span class="n">malt_lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">maltdata</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span><span class="p">]</span>
+    <span class="n">lemsent_lst</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lemsent</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)</span>
+                   <span class="k">if</span> <span class="n">i</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">PREV_MALT</span> <span class="o">==</span> <span class="n">maltdata</span> <span class="ow">and</span> <span class="n">WASBROKEN</span><span class="p">:</span>
+        <span class="n">midx</span> <span class="o">=</span> <span class="n">STARTFROM</span>
+        <span class="n">lidx</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># assuming that the first word was garbled after the split</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">midx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">lidx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">od</span><span class="p">()</span>
+    <span class="c1"># if our lemsent contains only one word we return current tokens</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lemsent_lst</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">mline</span> <span class="o">=</span> <span class="n">malt_lst</span><span class="p">[</span><span class="n">midx</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">lline</span> <span class="o">=</span> <span class="n">lemsent_lst</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">lline</span><span class="p">]</span> <span class="o">=</span> <span class="n">mline</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mline</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">mline</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">mjump</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">ljump</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">mline</span> <span class="o">=</span> <span class="n">malt_lst</span><span class="p">[</span><span class="n">midx</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">lline</span> <span class="o">=</span> <span class="n">lemsent_lst</span><span class="p">[</span><span class="n">lidx</span><span class="p">]</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">lline</span><span class="p">]</span> <span class="o">=</span> <span class="n">mline</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mline</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">mline</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mline</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">lline</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">lline</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;@card@&#39;</span><span class="p">:</span>  <span class="c1"># because 60%!=@card@ triggers inf loop</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">lline</span><span class="p">]</span> <span class="o">=</span> <span class="n">mline</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mline</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">mline</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+                <span class="n">midx</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">lidx</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="c1"># we need to check first if SENNA token exists in MALT data</span>
+            <span class="n">exists</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">malt_lst</span> <span class="k">if</span> <span class="n">lline</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="mi">2</span><span class="p">]</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="c1"># now we need to be sure it was not &quot;&#39;s&quot; contraction of &quot;be&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span> <span class="ow">and</span> <span class="n">lline</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&#39;s&quot;</span><span class="p">:</span>
+                <span class="n">exists</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">malt_lst</span> <span class="k">if</span> <span class="s2">&quot;be&quot;</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">:</span>
+                <span class="n">lidx</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">restuple</span> <span class="o">=</span> <span class="n">line_rearrange</span><span class="p">(</span><span class="n">mline</span><span class="p">,</span> <span class="n">lline</span><span class="p">,</span> <span class="n">midx</span><span class="p">,</span> <span class="n">lidx</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">restuple</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># sent is broken, saving split point</span>
+                <span class="n">WASBROKEN</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">break</span>
+            <span class="n">lline</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">new_idx</span><span class="p">,</span> <span class="n">dep</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="n">restuple</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">lline</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos</span><span class="p">,</span> <span class="n">new_idx</span><span class="p">,</span> <span class="n">dep</span>
+            <span class="n">mjump</span> <span class="o">=</span> <span class="n">m</span> <span class="o">-</span> <span class="n">midx</span>
+            <span class="n">ljump</span> <span class="o">=</span> <span class="n">l</span> <span class="o">-</span> <span class="n">lidx</span>
+        <span class="n">midx</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">mjump</span><span class="p">)</span>
+        <span class="n">lidx</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">ljump</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">malt_lst</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">midx</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lemsent_lst</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="n">lidx</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checking if current sent was indexed to the end. This is necessary because</span>
+<span class="sd">    SENNA might split the sent in parts and we need to know if the current</span>
+<span class="sd">    sent is indeed the last part. If it is, we reset WASBROKEN and STARTFROM</span>
+<span class="sd">    globals</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lemsent_last</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">result</span><span class="p">))]</span>
+    <span class="n">malt_last</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">malt_lst</span><span class="p">))</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">lemsent_last</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">malt_last</span><span class="p">):</span>
+        <span class="n">WASBROKEN</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">STARTFROM</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">PREV_MALT</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">WASBROKEN</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># STARTFROM = int(lemsent_last[1])</span>
+        <span class="n">itmalt</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">malt_lst</span><span class="p">)</span>
+        <span class="n">break_line</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">result</span><span class="p">))])</span>
+        <span class="n">STARTFROM</span> <span class="o">=</span> <span class="n">malt_lst</span><span class="o">.</span><span class="n">index</span><span class="p">([</span><span class="nb">next</span><span class="p">(</span><span class="n">itmalt</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">itmalt</span>
+                                    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">break_line</span><span class="p">)</span> <span class="ow">in</span> <span class="n">e</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">PREV_MALT</span> <span class="o">=</span> <span class="n">maltdata</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="alg_controller"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.alg_controller">[docs]</a><span class="k">def</span> <span class="nf">alg_controller</span><span class="p">(</span><span class="n">tuparg</span><span class="p">,</span> <span class="n">remapped</span><span class="p">,</span> <span class="n">deptype</span><span class="p">,</span> <span class="n">govs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Switch between various head searching strategies.</span>
+<span class="sd">    If first strategy fails, fallback to the next one until the phrase head</span>
+<span class="sd">    is found or not.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        | *tuparg* (tuple) -- tuples of SENNA&#39;s tokens with POS-tags and</span>
+<span class="sd">          indeces.</span>
+
+<span class="sd">          Example::</span>
+
+<span class="sd">                ((&#39;the&#39;, &#39;dt&#39;, &#39;1&#39;),</span>
+<span class="sd">                 (&#39;rolling&#39;, &#39;nnp&#39;, &#39;2&#39;),</span>
+<span class="sd">                 (&#39;stones&#39;, &#39;nnps&#39;, &#39;3&#39;),</span>
+<span class="sd">                 (&#39;,&#39;, &#39;,&#39;, &#39;4&#39;),</span>
+<span class="sd">                 (&#39;genesis&#39;, &#39;nnp&#39;, &#39;5&#39;)</span>
+
+<span class="sd">        | *remapped* (OrderedDict) -- a mapping between SENNA&#39;s tokens and Malt</span>
+<span class="sd">          block, where first tuple is SENNA&#39;s ``(token, index)`` and second</span>
+<span class="sd">          tuple is Malt&#39;s ``(&#39;POS-tag&#39;, &quot;token&#39;s position&quot;, &quot;token&#39;s governor</span>
+<span class="sd">          position&quot;)``</span>
+<span class="sd">        | *deptype* (str) -- dependency type string</span>
+<span class="sd">        | *govs* (tuple) -- governor tuple as retrieved from SENNA&#39;s output.</span>
+<span class="sd">          Example: ``[(&#39;pretend&#39;, &#39;VBP&#39;, &#39;33&#39;)]``</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        *head* (tuple) -- phrase head found by one of the strategies.</span>
+<span class="sd">         Example: ``(&#39;september/nnp/25&#39;, &#39;LINEAR&#39;)``</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># running algorithms</span>
+    <span class="n">head</span> <span class="o">=</span> <span class="n">Malt</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tuparg</span><span class="p">,</span> <span class="n">remapped</span><span class="p">,</span> <span class="n">deptype</span><span class="p">,</span> <span class="n">govs</span><span class="p">)</span>
+    <span class="c1"># if head was not found by MALT switch to MALT_SPAN</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">head</span> <span class="ow">and</span> <span class="n">is_called</span><span class="p">(</span><span class="s1">&#39;MALT_SPAN&#39;</span><span class="p">):</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="n">MaltSpan</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tuparg</span><span class="p">,</span> <span class="n">remapped</span><span class="p">)</span>
+    <span class="c1"># if head was not found by MALT_SPAN switch to LINEAR</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">head</span> <span class="ow">and</span> <span class="n">is_called</span><span class="p">(</span><span class="s1">&#39;LINEAR&#39;</span><span class="p">):</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="n">Linear</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tuparg</span><span class="p">,</span> <span class="n">deptype</span><span class="p">)</span>
+    <span class="c1"># if head not found return full chunk and flag as FAILED</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">head</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">tuparg</span><span class="p">]),</span> <span class="s1">&#39;FAILED&#39;</span>
+    <span class="k">return</span> <span class="n">head</span></div>
+
+
+<div class="viewcode-block" id="is_called"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.is_called">[docs]</a><span class="k">def</span> <span class="nf">is_called</span><span class="p">(</span><span class="o">*</span><span class="n">calling_algs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Use global ALGS to trigger head searching algorithms that we explicitly</span>
+<span class="sd">    defined with `-a` option.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="kc">True</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">calling_algs</span> <span class="k">if</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ALGS</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="head_searcher"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.head_searcher">[docs]</a><span class="k">def</span> <span class="nf">head_searcher</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Do various postprocessing steps (see code comments).</span>
+<span class="sd">    Assign globals, system paths, save results and clean up the left over</span>
+<span class="sd">    files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        *args* (dict) -- a dict of arguments supplied by the user</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">head</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write  ``&lt;sents&gt;``, ``&lt;/sents&gt;`` to the result file.</span>
+<span class="sd">        So that tensor.py could parse it afterwards.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fopen</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">head</span><span class="p">:</span>
+                <span class="n">fopen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&lt;sents&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fopen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&lt;/sents&gt;&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fopen</span><span class="p">:</span>
+            <span class="n">fdata</span> <span class="o">=</span> <span class="n">fopen</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fname</span><span class="o">+</span><span class="s1">&#39;.gz&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">gf</span><span class="p">:</span>
+            <span class="n">gf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fdata</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">write_etree</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">etr</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fopen</span><span class="p">:</span>
+            <span class="n">fopen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">etr</span><span class="p">)</span>
+            <span class="n">fopen</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>  <span class="c1"># sentences delimiter</span>
+
+    <span class="c1"># defining algorithms to use</span>
+    <span class="k">global</span> <span class="n">ALGS</span>
+    <span class="n">ALGS</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">alg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+    <span class="c1"># handle user specified args</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
+            <span class="n">sge_id</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%04d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SGE_TASK_ID&#39;</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># if args.dir is not set but args.file is set we just pass</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="p">,</span>
+                                <span class="s1">&#39;ukwac.fixed-nowiki.node&#39;</span> <span class="o">+</span> <span class="n">sge_id</span> <span class="o">+</span>
+                                <span class="s1">&#39;.converted.xml.gz&#39;</span><span class="p">)</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">]</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">file</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="p">:</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: Please provide input dir or input file name.&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">file</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Please provide only the file or the directory!&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">file</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Please provide the files to process!&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Can&#39;t create </span><span class="si">{0}</span><span class="s2"> or it already exists&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">))</span>
+        <span class="n">output_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">output_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="c1"># begin processing</span>
+    <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+        <span class="n">current_fname</span> <span class="o">=</span> <span class="s1">&#39;heads.&#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">qsub</span><span class="p">:</span>
+            <span class="c1"># we copy the file to remote machine for faster processing</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="s1">&#39;/local/pavels&#39;</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s1">&#39;/local/pavels&#39;</span><span class="p">)</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;/local/pavels&#39;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s1">&#39;/local/pavels&#39;</span><span class="p">)</span>
+            <span class="n">current_fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;/local/pavels&#39;</span><span class="p">,</span> <span class="s1">&#39;heads.&#39;</span> <span class="o">+</span>
+                                         <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;PROCESSING FILE: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">current_fname</span><span class="p">))</span>  <span class="c1"># debug only</span>
+        <span class="n">parsed_etrees</span> <span class="o">=</span> <span class="n">read_result_xml</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+        <span class="n">wrap</span><span class="p">(</span><span class="n">current_fname</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">etr</span> <span class="ow">in</span> <span class="n">parsed_etrees</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">etr</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span>
+                <span class="n">malt_text</span> <span class="o">=</span> <span class="n">etr</span><span class="o">.</span><span class="n">findtext</span><span class="p">(</span><span class="s1">&#39;malt&#39;</span><span class="p">)</span>  <span class="c1"># complete malt parse</span>
+                <span class="n">lem_sent</span> <span class="o">=</span> <span class="n">etr</span><span class="o">.</span><span class="n">findtext</span><span class="p">(</span><span class="s1">&#39;lemsent&#39;</span><span class="p">)</span>  <span class="c1"># lemsent build from malt</span>
+                <span class="c1"># lem_sent = etr.findsghtext(&#39;sent&#39;)  # lemsent from malt</span>
+                <span class="c1"># rawsent = etr.findtext(&#39;rawsent&#39;)  # rawsent from .output</span>
+                <span class="n">remapped</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="c1"># return True if algorithm is allowed</span>
+                <span class="k">if</span> <span class="n">is_called</span><span class="p">(</span><span class="s1">&#39;MALT&#39;</span><span class="p">,</span> <span class="s1">&#39;MALT_SPAN&#39;</span><span class="p">):</span>
+                    <span class="n">remapped</span> <span class="o">=</span> <span class="n">map_to_malt_indexes</span><span class="p">(</span><span class="n">lem_sent</span><span class="p">,</span> <span class="n">malt_text</span><span class="p">)</span>
+            <span class="n">malt_element</span> <span class="o">=</span> <span class="n">etr</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;malt&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">malt_element</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">etr</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">malt_element</span><span class="p">)</span>
+
+            <span class="c1"># sent = etr.find(&#39;sent&#39;)</span>
+            <span class="c1"># if sent is not None: etr.remove(sent)</span>
+
+            <span class="c1"># before processing we copy original nodes into &quot;source&quot; attrib</span>
+            <span class="k">for</span> <span class="n">deps</span> <span class="ow">in</span> <span class="n">etr</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="s1">&#39;dependencies&#39;</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">deps</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="s1">&#39;dep&#39;</span><span class="p">):</span>
+                    <span class="n">dep</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="n">dep</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+                    <span class="c1"># include source without POS-tags and position indeces</span>
+                    <span class="n">orig_senna</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">tok</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                                          <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="n">dep</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">()])</span>
+                    <span class="n">dep</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="n">orig_senna</span><span class="p">)</span>
+
+            <span class="c1"># begin head search processing</span>
+            <span class="k">for</span> <span class="n">pred</span> <span class="ow">in</span> <span class="n">etr</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="s1">&#39;predicate&#39;</span><span class="p">):</span>
+                <span class="n">govs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+                        <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">pred</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="s1">&#39;governor&#39;</span><span class="p">)]</span>
+                <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">pred</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="s1">&#39;dep&#39;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">dep</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="s1">&#39;V&#39;</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">tup_arg</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">tuple</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+                                     <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">dep</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">()])</span>
+                    <span class="c1"># starting head search</span>
+                    <span class="n">head</span> <span class="o">=</span> <span class="n">alg_controller</span><span class="p">(</span><span class="n">tup_arg</span><span class="p">,</span> <span class="n">remapped</span><span class="p">,</span>
+                                          <span class="n">dep</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">],</span>
+                                          <span class="n">govs</span><span class="p">)</span>
+                    <span class="n">dep</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">head</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">dep</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">&#39;algorithm&#39;</span><span class="p">,</span> <span class="n">head</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1"># removing &lt;rawsent&gt; and &lt;lemsent&gt;</span>
+            <span class="n">rawsent</span> <span class="o">=</span> <span class="n">etr</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;rawsent&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">rawsent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">etr</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">rawsent</span><span class="p">)</span>
+            <span class="n">lemsent</span> <span class="o">=</span> <span class="n">etr</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;lemsent&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">lemsent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">etr</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">lemsent</span><span class="p">)</span>
+            <span class="n">write_etree</span><span class="p">(</span><span class="n">current_fname</span><span class="p">,</span> <span class="n">et</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">etr</span><span class="p">))</span>
+        <span class="n">wrap</span><span class="p">(</span><span class="n">current_fname</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">qsub</span><span class="p">:</span>
+            <span class="c1"># when done processing</span>
+            <span class="n">clean_up</span><span class="p">(</span><span class="n">current_fname</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="clean_up"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.head_searcher.clean_up">[docs]</a><span class="k">def</span> <span class="nf">clean_up</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove input and output files after processing.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        | *fname* (str) -- file name</span>
+<span class="sd">        | *output_dir* (str) -- dir where the results are saved</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sb</span><span class="o">.</span><span class="n">call</span><span class="p">([</span><span class="s1">&#39;ssh&#39;</span><span class="p">,</span> <span class="s1">&#39;forbin&#39;</span><span class="p">])</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">fname</span><span class="o">+</span><span class="s1">&#39;.gz&#39;</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">)</span>
+        <span class="c1">#os.remove(fname)</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s1">&#39;WARNING! clean_up() failed&#39;</span></div>
+
+
+<span class="n">WASBROKEN</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">STARTFROM</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">PREV_MALT</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">prs</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    This script parses files processed by SENNA role labeler and attempts to</span>
+<span class="s2">    find phrase heads. In order to accomplish this, it first tries to use malt</span>
+<span class="s2">    parse information that comes from original ukwac corpus and if this fails</span>
+<span class="s2">    it uses slightly less strict malt span search, if the two above still fail</span>
+<span class="s2">    it executes head searching based on Magerman&#39;s head percolation table.&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">prs</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="s1">&#39;--dir&#39;</span><span class="p">,</span>
+                     <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Specify directory where processed ukwac files are </span><span class="se">\</span>
+<span class="s1">                     located.&#39;</span><span class="p">,</span>
+                     <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">prs</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="s1">&#39;--file&#39;</span><span class="p">,</span>
+                     <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Specify an xml file to process.&#39;</span><span class="p">,</span>
+                     <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">prs</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="s1">&#39;--out&#39;</span><span class="p">,</span>
+                     <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Specify output directory. If not specified </span><span class="se">\</span>
+<span class="s1">                     current dir is used.&#39;</span><span class="p">,</span>
+                     <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">prs</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-qs&#39;</span><span class="p">,</span> <span class="s1">&#39;--qsub&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+                     <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Use this option if you run the script on forbin </span><span class="se">\</span>
+<span class="s1">                       with qsub. The script will copy the required files </span><span class="se">\</span>
+<span class="s1">                       under its /local instance dir and copy the results </span><span class="se">\</span>
+<span class="s1">                       to /local/pavels&#39;</span><span class="p">,</span>
+                     <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">prs</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="s1">&#39;--alg&#39;</span><span class="p">,</span>
+                     <span class="n">default</span><span class="o">=</span><span class="s1">&#39;MALT,MALT_SPAN,LINEAR&#39;</span><span class="p">,</span>
+                     <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Choose a head searching strategy. Available </span><span class="se">\</span>
+<span class="s1">                     strategies: MALT, MALT_SPAN, LINEAR. Usage example: </span><span class="se">\</span>
+<span class="s1">                     ./head_searcher.py --alg MALT,MALT_SPAN.&#39;</span><span class="p">,</span>
+                     <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">head_searcher</span><span class="p">(</span><span class="n">prs</span><span class="o">.</span><span class="n">parse_args</span><span class="p">())</span>
+
+    <span class="c1">### uncomment below to generate script execution .png graph</span>
+    <span class="c1"># graphviz = GraphvizOutput()</span>
+    <span class="c1"># graphviz.output_file = &#39;head_searcher.png&#39;</span>
+    <span class="c1"># with PyCallGraph(output=graphviz):</span>
+    <span class="c1">#    head_searcher(arguments)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, tastyminerals.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

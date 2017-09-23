@@ -1,0 +1,1088 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ukwac2tensor scripts &mdash; ukwac2tensor 0.0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="ukwac2tensor 0.0.1 documentation" href="index.html"/>
+        <link rel="next" title="Output description" href="output.html"/>
+        <link rel="prev" title="Howto" href="usage.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> ukwac2tensor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Howto</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ukwac2tensor scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-ukwac2tensor.head_searcher">head_searcher.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-ukwac2tensor.tensor">tensor.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-ukwac2tensor.ukwac_converter">ukwac_converter.py</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="output.html">Output description</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">ukwac2tensor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>ukwac2tensor scripts</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/ukwac2tensor.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ukwac2tensor-scripts">
+<h1>ukwac2tensor scripts<a class="headerlink" href="#ukwac2tensor-scripts" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-ukwac2tensor.head_searcher">
+<span id="head-searcher-py"></span><span id="head-searcher"></span><h2>head_searcher.py<a class="headerlink" href="#module-ukwac2tensor.head_searcher" title="Permalink to this headline">¶</a></h2>
+<p>SENNA role labeler does not provide head detection functionality.
+This script attempts to find phrase head using the results of Malt parser and
+some additional heuristics heavily influenced by Magerman&#8217;s head percolation
+table.
+We implement an algorithm which is applied on SENNA processed files which we
+afterwards converted into xml format.
+The algorithm consists of <strong>three</strong> major stages or fallback strategies
+arbitrary called MALT, MALT_SPAN and LINEAR. The fallback strategies are
+<strong>applied sequentially</strong> until the phrase head is found. Such a 3-step approach
+allows us to achieve 90% head recall on the whole corpus. Intuitively, we give
+preference to the output produced by Malt parser as opposed to linear head
+search.</p>
+<div class="figure align-center" id="id5">
+<a class="reference internal image-reference" href="_images/head_searcher.png"><img alt="_images/head_searcher.png" src="_images/head_searcher.png" style="width: 845.75px; height: 574.6px;" /></a>
+<p class="caption"><span class="caption-text">execution diagram</span></p>
+</div>
+<dl class="class">
+<dt id="ukwac2tensor.head_searcher.Linear">
+<em class="property">class </em><code class="descclassname">ukwac2tensor.head_searcher.</code><code class="descname">Linear</code><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#Linear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.Linear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class that implements LINEAR strategy.
+LINEAR strategy is triggered when MALT and MALT_SPAN fail or explicitly
+with <code class="docutils literal"><span class="pre">-a</span> <span class="pre">LINEAR</span></code> option. The key idea here is to return the last token
+in the stack.
+For example, for <em>“against the twilight redness of the bay”</em> node we first
+check if it is an adverbial phrase, if it is, the strategy returns the
+first VBG|VBZ|VBN, NN or RB token.
+If there are several such tokens, VBG|VBZ|VBN has the highest and RB the
+lowest priority. For example, VBG|VBZ|VBN will be returned if it precedes
+NN|RB and NN will be returned if it precedes RB accordingly.</p>
+<dl class="staticmethod">
+<dt id="ukwac2tensor.head_searcher.Linear._get_ap_head">
+<em class="property">static </em><code class="descname">_get_ap_head</code><span class="sig-paren">(</span><em>tups</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#Linear._get_ap_head"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.Linear._get_ap_head" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find an appropriate AP head (RB|VBG) for the role types: ADV, MNR, TMP.
+Return last VBG, NN or RB. Head priority &#8211; VBG &gt; NN &gt; RB.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><dl class="first last docutils">
+<dt><em>tups</em> (tuple) &#8211; tuples of arguments:</dt>
+<dd><code class="docutils literal"><span class="pre">('reading',</span> <span class="pre">'nnp',</span> <span class="pre">'26'),</span> <span class="pre">('festival',</span> <span class="pre">'nnp',</span> <span class="pre">'27')</span></code></dd>
+</dl>
+</dd>
+<dt>Returns:</dt>
+<dd><em>found head with POS-tag and position index</em> <code class="docutils literal"><span class="pre">tower/NNS/12</span></code> and
+the algorithm name</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.head_searcher.Linear._get_np_head">
+<em class="property">static </em><code class="descname">_get_np_head</code><span class="sig-paren">(</span><em>tups</em>, <em>np=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#Linear._get_np_head"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.Linear._get_np_head" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement Magerman&#8217;s table inspired rules to search for phrase heads.</p>
+<p>Example phrase: <em>“against the twilight redness of the bay”</em></p>
+<p>Iterate over each token and check if it is a member of
+NN|NNS|NNP|NNPS|VBG list, if it is, pop (if stack is not empty) and
+push the current token to the stack. In such manner iterate over all
+tokens in the node and return the last element on the stack in the end.
+When encounter a token outside of the list, break the iteration but
+only if we have already pushed once and return whatever is on the
+stack.</p>
+<p>Suppose we encounter a possessive, we do not break the iteration in
+that case but continue, we push the next token after the possessive
+and return it in the end. Applying this algorithm to the
+example phrase above we find <em>“redness”</em> to be the phrase head.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>tups</em> (tuple) &#8211; tuples of arguments</dd>
+<dt>Returns:</dt>
+<dd><em>found head with POS-tag and position index</em> <code class="docutils literal"><span class="pre">tower/NNS/12</span></code> and
+the algorithm name</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.head_searcher.Linear.run">
+<em class="property">static </em><code class="descname">run</code><span class="sig-paren">(</span><em>tup_arg</em>, <em>deptype</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#Linear.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.Linear.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run LINEAR algorithm.
+Decide whether to call AP or NP head searching heuristics.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>tup_arg</em> (tuple) &#8211; tuples of arguments:
+<code class="docutils literal"><span class="pre">('reading',</span> <span class="pre">'nnp',</span> <span class="pre">'26'),</span> <span class="pre">('festival',</span> <span class="pre">'nnp',</span> <span class="pre">'27')</span></code></div>
+<div class="line"><em>deptype</em> (str) &#8211; dependency type</div>
+</div>
+</dd>
+<dt>Returns:</dt>
+<dd><em>found head with POS-tag and position index</em> <code class="docutils literal"><span class="pre">tower/NNS/12</span></code> and
+the algorithm name</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ukwac2tensor.head_searcher.Malt">
+<em class="property">class </em><code class="descclassname">ukwac2tensor.head_searcher.</code><code class="descname">Malt</code><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#Malt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.Malt" title="Permalink to this definition">¶</a></dt>
+<dd><p>MALT strategy implementation.
+In order to find the phrase head we analyze the results produced by
+Malt parser and SENNA. When SENNA processes the sentence it returns its
+governors and their dependents which we concatenate into role nodes.
+For example:
+<em>“Meg stood in the garden doorway , her small figure silhouetted against
+the twilight redness of the bay .”</em></p>
+<p>The sentence above will have <em>“stand”</em> and <em>“silhouetted”</em> as governors
+where <em>“Meg”</em>, <em>“in the garden doorway”</em> shall be the role nodes of
+<em>“stand”</em> and <em>“her small figure”</em>, <em>“against the twilight redness of the
+bay”</em> shall be the role nodes of <em>“silhouetted”</em>.
+In addition to the information above we also have the following Malt parser
+output:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>token      POS-tag index depend role
+meg        np      1     2      sbj
+stand      vvd     2     0      root
+in         in      3     2      adv
+the        dt      4     6      nmod
+garden     nn      5     6      nmod
+doorway    nn      6     3      pmod
+,          ,       7     11     p
+her        pp$     8     10     nmod
+small      jj      9     10     nmod
+figure     nn      10    11     sbj
+silhouette vvn     11    2      prn
+against    in      12    11     adv
+the        dt      13    15     nmod
+twilight   nn      14    15     nmod
+redness    nn      15    12     pmod
+of         in      16    15     nmod
+the        dt      17    18     nmod
+bay        nn      18    16     pmod
+.          sent    19    2      p
+</pre></div>
+</div>
+<p>The above example is retrieved from <code class="docutils literal"><span class="pre">&lt;malt&gt;&lt;/malt&gt;</span></code> elements in xml.
+In particular, we need to find the heads of the following three phrases:
+| <em>“in the garden doorway”</em>
+| <em>“her small figure”</em>
+| <em>“against the twilight redness of the bay”</em></p>
+<p>This is done by finding SENNA&#8217;s governor in Malt parser output, governor&#8217;s
+immediate dependents and comparing them with the tokens from SENNA&#8217;s role
+nodes.
+For our example the immediate dependents of <em>“stand”</em> are <em>“silhouette”</em>,
+<em>“in”</em> and the immediate dependents of <em>“silhouette”</em> are <em>“ , ”</em>,
+<em>“against”</em>, <em>“figure”</em>. These dependents (except <em>“ , ”</em>) are all present
+in the role nodes <em>“in the garden doorway”</em>, <em>“her small figure”</em>,
+<em>“against the twilight redness of the bay”</em> but not all of them are of
+interest to us. In particular we do not want to see prepositions as phrase
+heads, therefore the strategy skips them and returns the immediate
+dependents of the prepositions that are <em>“doorway”</em> for <em>“in”</em> and
+<em>“redness”</em> for <em>“against”</em>. Similarly, we skip any modal verbs and attempt
+to return their dependents as potential head candidates. If the phrase head
+is not a noun, verb or pronoun it is not accepted and the strategy falls
+back to the next searching strategy.</p>
+<dl class="staticmethod">
+<dt id="ukwac2tensor.head_searcher.Malt._get_token_malt_idx">
+<em class="property">static </em><code class="descname">_get_token_malt_idx</code><span class="sig-paren">(</span><em>malt_map</em>, <em>depdic</em>, <em>token</em>, <em>isgov=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#Malt._get_token_malt_idx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.Malt._get_token_malt_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempt to find a corresponding token in malt parse and replace the
+ukwac index with Malt index. Use mapping dict to lookup Malt indeces
+and return SENNA token with Malt index.</p>
+<p>&lt;There are couple of corrections I make due to MALT &lt;&gt; SENNA parse
+differences. I am checking whether a verb has any <code class="docutils literal"><span class="pre">md</span></code>, <code class="docutils literal"><span class="pre">vbz</span></code>,
+<code class="docutils literal"><span class="pre">vhz</span></code> etc. parents. If it does, I mark this verb so that later we
+could correctly identify the true parent for current token.
+Here is an example of Malt output to understand better what I mean:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">she</span> <span class="n">pp</span> <span class="mi">1</span> <span class="mi">2</span> <span class="n">sbj</span> <span class="o">--&gt;</span>
+<span class="n">could</span> <span class="n">md</span> <span class="mi">2</span> <span class="mi">0</span> <span class="n">root</span> <span class="o">&lt;--</span>
+<span class="n">see</span> <span class="n">vv</span> <span class="mi">3</span> <span class="mi">2</span> <span class="n">vc</span>
+</pre></div>
+</div>
+<p>Notice how <em>&#8220;she&#8221;</em> points to <code class="docutils literal"><span class="pre">md</span></code> parent in MALT (while SENNA will
+have <em>&#8220;see&#8221;</em> as a parent).</p>
+<p>Another example (malt output):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">the</span> <span class="n">dt</span> <span class="mi">1</span> <span class="mi">2</span> <span class="n">nmod</span>
+<span class="n">bird</span> <span class="n">nn</span> <span class="mi">2</span> <span class="mi">3</span> <span class="n">sbj</span> <span class="o">--&gt;</span>
+<span class="n">be</span> <span class="n">vbd</span> <span class="mi">3</span> <span class="mi">0</span> <span class="n">root</span> <span class="o">&lt;--</span>
+<span class="n">go</span> <span class="n">vvn</span> <span class="mi">4</span> <span class="mi">3</span> <span class="n">vc</span>
+<span class="o">.</span> <span class="n">sent</span> <span class="mi">5</span> <span class="mi">3</span> <span class="n">p</span>
+</pre></div>
+</div>
+<p>Notice how <em>&#8220;bird&#8221;</em> points to <code class="docutils literal"><span class="pre">vbd</span></code> instead of <em>&#8220;go&#8221;</em>.
+This is not the only MALT &lt;&gt; SENNA parse difference, but one which
+requires separate handling. I have created unit-tests for such cases.
+Please run unit-tests each time after you change anything.&gt;</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>malt_map</em> (OrderedDict) &#8211; a mapping of SENNA to MALT tokens</div>
+<div class="line"><em>depdic</em> (dict) &#8211; a mapping from SENNA index to MALT index, tag</div>
+<div class="line"><em>token</em> (tuple) &#8211; SENNA tuple (&#8216;settle&#8217;, &#8216;VB&#8217;, &#8216;4&#8217;), which is
+used to get MALT values from <em>malt_map</em></div>
+<div class="line"><em>isgov</em> (bool) &#8211; True, if token is a governor and should be
+handled in a special way</div>
+</div>
+</dd>
+<dt>Returns:</dt>
+<dd><p class="first">a tuple of SENNA and Malt token indeces where <code class="docutils literal"><span class="pre">37</span></code> corresponds to
+Malt token index and <code class="docutils literal"><span class="pre">35</span></code> points to the token&#8217;s governor:</p>
+<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="p">((</span><span class="s1">&#39;like&#39;</span><span class="p">,</span> <span class="s1">&#39;VBD&#39;</span><span class="p">,</span> <span class="s1">&#39;36&#39;</span><span class="p">),</span> <span class="s1">&#39;37&#39;</span><span class="p">,</span> <span class="s1">&#39;35&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.head_searcher.Malt.run">
+<em class="property">static </em><code class="descname">run</code><span class="sig-paren">(</span><em>tups</em>, <em>remapped</em>, <em>deptype</em>, <em>govs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#Malt.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.Malt.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use preprocessed malt data to find a tuple head. If the head can not be
+found fall back to head finding algorithm.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>tups</em> (tuple) &#8211; tuples of arguments</div>
+<div class="line"><em>remapped</em> (OrderedDict) &#8211; a mapping of SENNA to Malt tokens</div>
+<div class="line"><em>deptype</em> (str) &#8211; dependency type</div>
+<div class="line"><em>govs</em> (list) &#8211; a list of governor tuples</div>
+</div>
+</dd>
+<dt>Returns:</dt>
+<dd><em>found head with POS-tag and position index</em> <code class="docutils literal"><span class="pre">tower/NNS/12</span></code> and
+the algorithm name</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ukwac2tensor.head_searcher.MaltSpan">
+<em class="property">class </em><code class="descclassname">ukwac2tensor.head_searcher.</code><code class="descname">MaltSpan</code><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#MaltSpan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.MaltSpan" title="Permalink to this definition">¶</a></dt>
+<dd><p>MALT_SPAN strategy implementation.</p>
+<p>Attempt to find malt head when MALT index search fails.
+Search for the token with the lowest positional index within Malt
+tokens <strong>block</strong>, which is the size of the SENNA node. If token
+position with the lowest index is in a list of allowed heads, accept it
+as NP head. If there are several tokens with the same index, fall back
+to LINEAR.
+&lt;If this is too confusing, see first the input xml file and find
+<code class="docutils literal"><span class="pre">&lt;malt&gt;&lt;/malt&gt;</span></code> tags. Then examine the example below.&gt;</p>
+<p>Malt block:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">back</span> <span class="n">rb</span> <span class="mi">19</span> <span class="mi">16</span> <span class="n">adv</span>
+<span class="n">onto</span> <span class="ow">in</span> <span class="mi">20</span> <span class="mi">19</span> <span class="n">amod</span>
+<span class="n">the</span> <span class="n">dt</span> <span class="mi">21</span> <span class="mi">23</span> <span class="n">nmod</span>
+<span class="n">shareholding</span> <span class="n">nn</span> <span class="mi">22</span> <span class="mi">23</span> <span class="n">nmod</span>
+<span class="n">register</span> <span class="n">nns</span> <span class="mi">23</span> <span class="mi">20</span> <span class="n">pmod</span> <span class="o">&lt;--</span> <span class="n">lowest</span> <span class="n">pos</span> <span class="n">index</span> <span class="mi">20</span>
+</pre></div>
+</div>
+<p>SENNA node:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">dep</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;A2&quot;</span><span class="o">&gt;</span>
+    <span class="n">back</span><span class="o">/</span><span class="n">RB</span><span class="o">/</span><span class="mi">19</span> <span class="n">onto</span><span class="o">/</span><span class="n">IN</span><span class="o">/</span><span class="mi">20</span> <span class="n">the</span><span class="o">/</span><span class="n">DT</span><span class="o">/</span><span class="mi">21</span> <span class="n">shareholding</span><span class="o">/</span><span class="n">NN</span><span class="o">/</span><span class="mi">22</span> <span class="n">register</span><span class="o">/</span><span class="n">NNS</span><span class="o">/</span><span class="mi">23</span>
+<span class="o">&lt;/</span><span class="n">dep</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<dl class="staticmethod">
+<dt id="ukwac2tensor.head_searcher.MaltSpan.run">
+<em class="property">static </em><code class="descname">run</code><span class="sig-paren">(</span><em>tups</em>, <em>remapped</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#MaltSpan.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.MaltSpan.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run MALT_SPAN algorithm.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>tups</em> (tuple) &#8211; tuples of arguments</div>
+<div class="line"><em>remapped</em> (OrderedDict) &#8211; a mapping of SENNA to Malt tokens</div>
+<div class="line"><code class="docutils literal"><span class="pre">(('the',</span> <span class="pre">1),</span> <span class="pre">('dt',</span> <span class="pre">'1',</span> <span class="pre">'39')),</span></code></div>
+<div class="line"><code class="docutils literal"><span class="pre">(('rolling',</span> <span class="pre">2),</span> <span class="pre">('np',</span> <span class="pre">'2',</span> <span class="pre">'39')),</span></code></div>
+<div class="line"><code class="docutils literal"><span class="pre">(('stones',</span> <span class="pre">3),</span> <span class="pre">('np',</span> <span class="pre">'3',</span> <span class="pre">'39'))</span></code></div>
+<div class="line"><code class="docutils literal"><span class="pre">('the',</span> <span class="pre">1)</span></code> is SENNA token and its index</div>
+<div class="line"><code class="docutils literal"><span class="pre">('dt',</span> <span class="pre">'1',</span> <span class="pre">'39')</span></code> is Malt data</div>
+<div class="line"><code class="docutils literal"><span class="pre">dt</span></code> is Malt defined POS-tag for &#8220;the&#8221;.</div>
+<div class="line"><code class="docutils literal"><span class="pre">1</span></code> is the token index.</div>
+<div class="line"><code class="docutils literal"><span class="pre">39</span></code> is the index of &#8220;the&#8221; governor (dependency link).</div>
+</div>
+</dd>
+<dt>Returns:</dt>
+<dd><em>found head with POS-tag and position index</em> <code class="docutils literal"><span class="pre">tower/NNS/12</span></code> and
+the algorithm name</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.head_searcher._globals_init">
+<code class="descclassname">ukwac2tensor.head_searcher.</code><code class="descname">_globals_init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#_globals_init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher._globals_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize global list of algorithm names.
+&lt;This function is used only by unittest scripts&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.head_searcher.alg_controller">
+<code class="descclassname">ukwac2tensor.head_searcher.</code><code class="descname">alg_controller</code><span class="sig-paren">(</span><em>tuparg</em>, <em>remapped</em>, <em>deptype</em>, <em>govs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#alg_controller"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.alg_controller" title="Permalink to this definition">¶</a></dt>
+<dd><p>Switch between various head searching strategies.
+If first strategy fails, fallback to the next one until the phrase head
+is found or not.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first line-block">
+<div class="line"><em>tuparg</em> (tuple) &#8211; tuples of SENNA&#8217;s tokens with POS-tags and
+indeces.</div>
+</div>
+<blockquote>
+<div><p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">((</span><span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="s1">&#39;rolling&#39;</span><span class="p">,</span> <span class="s1">&#39;nnp&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="s1">&#39;stones&#39;</span><span class="p">,</span> <span class="s1">&#39;nnps&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;4&#39;</span><span class="p">),</span>
+ <span class="p">(</span><span class="s1">&#39;genesis&#39;</span><span class="p">,</span> <span class="s1">&#39;nnp&#39;</span><span class="p">,</span> <span class="s1">&#39;5&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="last line-block">
+<div class="line"><em>remapped</em> (OrderedDict) &#8211; a mapping between SENNA&#8217;s tokens and Malt
+block, where first tuple is SENNA&#8217;s <code class="docutils literal"><span class="pre">(token,</span> <span class="pre">index)</span></code> and second
+tuple is Malt&#8217;s <code class="docutils literal"><span class="pre">('POS-tag',</span> <span class="pre">&quot;token's</span> <span class="pre">position&quot;,</span> <span class="pre">&quot;token's</span> <span class="pre">governor</span>
+<span class="pre">position&quot;)</span></code></div>
+<div class="line"><em>deptype</em> (str) &#8211; dependency type string</div>
+<div class="line"><em>govs</em> (tuple) &#8211; governor tuple as retrieved from SENNA&#8217;s output.
+Example: <code class="docutils literal"><span class="pre">[('pretend',</span> <span class="pre">'VBP',</span> <span class="pre">'33')]</span></code></div>
+</div>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt><em>head</em> (tuple) &#8211; phrase head found by one of the strategies.</dt>
+<dd>Example: <code class="docutils literal"><span class="pre">('september/nnp/25',</span> <span class="pre">'LINEAR')</span></code></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.head_searcher.clean_up">
+<code class="descclassname">ukwac2tensor.head_searcher.</code><code class="descname">clean_up</code><span class="sig-paren">(</span><em>fname</em>, <em>output_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#clean_up"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.clean_up" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove input and output files after processing.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>fname</em> (str) &#8211; file name</div>
+<div class="line"><em>output_dir</em> (str) &#8211; dir where the results are saved</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.head_searcher.head_searcher">
+<code class="descclassname">ukwac2tensor.head_searcher.</code><code class="descname">head_searcher</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#head_searcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.head_searcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do various postprocessing steps (see code comments).
+Assign globals, system paths, save results and clean up the left over
+files.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>args</em> (dict) &#8211; a dict of arguments supplied by the user</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.head_searcher.is_called">
+<code class="descclassname">ukwac2tensor.head_searcher.</code><code class="descname">is_called</code><span class="sig-paren">(</span><em>*calling_algs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#is_called"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.is_called" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use global ALGS to trigger head searching algorithms that we explicitly
+defined with <cite>-a</cite> option.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.head_searcher.map_to_malt_indexes">
+<code class="descclassname">ukwac2tensor.head_searcher.</code><code class="descname">map_to_malt_indexes</code><span class="sig-paren">(</span><em>lemsent</em>, <em>maltdata</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#map_to_malt_indexes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.map_to_malt_indexes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign Malt block indexing to <code class="docutils literal"><span class="pre">&lt;lemsent&gt;</span></code> tokens, because <code class="docutils literal"><span class="pre">&lt;lemsent&gt;</span></code>
+number of tokens can and is often different from Malt&#8217;s.</p>
+<p>&lt;If we do not do this line rearrangement, we won&#8217;t be able to make use of
+Malt block in our xml input file. Malt block contains <strong>dependent -&gt;
+governor</strong> indeces that we use to find a phrase head.&gt;</p>
+<p>&lt;Maltdata shall have all non-normalized contractions of malt parse which,
+in case of SENNA&#8217;s output, are removed by <code class="docutils literal"><span class="pre">reduce_contractions</span></code> function
+from <strong>ukwac_converter.py</strong> script and therefore do not get into
+<code class="docutils literal"><span class="pre">lemsent</span></code>. This is also one of the reasons for SENNA - Malt index
+differences.&gt;</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>lemsent</em> (str) &#8211; a string from <code class="docutils literal"><span class="pre">&lt;lemsent&gt;&lt;/lemsent&gt;</span></code></div>
+<div class="line"><em>maltdata</em> (str) &#8211; a string from <code class="docutils literal"><span class="pre">&lt;malt&gt;&lt;/malt&gt;</span></code></div>
+</div>
+</dd>
+<dt>Returns:</dt>
+<dd><div class="first line-block">
+<div class="line"><em>result</em> (OrderedDict) &#8211; a mapping between SENNA&#8217;s tokens and Malt
+block, where first tuple is SENNA&#8217;s <code class="docutils literal"><span class="pre">(token,</span> <span class="pre">index)</span></code> and second
+tuple is Malt&#8217;s <code class="docutils literal"><span class="pre">('POS-tag',</span> <span class="pre">&quot;token's</span> <span class="pre">position&quot;,</span> <span class="pre">&quot;token's</span> <span class="pre">governor</span>
+<span class="pre">position&quot;)</span></code>::</div>
+</div>
+<blockquote>
+<div>[((&#8216;the&#8217;, 1), (&#8216;dt&#8217;, &#8216;1&#8217;, &#8216;39&#8217;)),
+((&#8216;rolling&#8217;, 2), (&#8216;np&#8217;, &#8216;3&#8217;, &#8216;39&#8217;)),
+((&#8216;stones&#8217;, 3), (&#8216;np&#8217;, &#8216;4&#8217;, &#8216;39&#8217;)),]</div></blockquote>
+<p class="last">&lt;The above example does not show any difference between SENNA and Malt
+indeces, however in many cases Malt index shall be different.&gt;</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.head_searcher.read_result_xml">
+<code class="descclassname">ukwac2tensor.head_searcher.</code><code class="descname">read_result_xml</code><span class="sig-paren">(</span><em>fname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/head_searcher.html#read_result_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.head_searcher.read_result_xml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read xml file and return xml.etree object</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>fname</em> (str) &#8211; file name</dd>
+<dt>Returns:</dt>
+<dd><em>etrees</em> (xml.etree) &#8211; xml representation of file contents</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-ukwac2tensor.tensor">
+<span id="tensor-py"></span><span id="tensor"></span><h2>tensor.py<a class="headerlink" href="#module-ukwac2tensor.tensor" title="Permalink to this headline">¶</a></h2>
+<p>This script creates 3-order tensor out of word0, relation(link), word1 tuples.
+It can compute either tuple counts or tuple PMI score.
+The result tensor is stored in .h5 file.</p>
+<dl class="function">
+<dt id="ukwac2tensor.tensor.file_reader">
+<code class="descclassname">ukwac2tensor.tensor.</code><code class="descname">file_reader</code><span class="sig-paren">(</span><em>fname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/tensor.html#file_reader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.tensor.file_reader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a .gz archive and return its contents as a string.
+If the file specified is not an archive it attempt to read it
+as a general file.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>fname</em> (str) &#8211; file path</dd>
+<dt>Returns:</dt>
+<dd><em>fdata</em> (str) &#8211; file contents</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.tensor.go_pandas">
+<code class="descclassname">ukwac2tensor.tensor.</code><code class="descname">go_pandas</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/tensor.html#go_pandas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.tensor.go_pandas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run xml parser, create a tensor from the returned counts dictionary,
+compute PMI&#8217; scores and replace the counts.
+Save the new dataframe in <cite>.h5</cite> file.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>args</em> (dict) &#8211; arguments supplied by the user</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.tensor.parse_heads_xml">
+<code class="descclassname">ukwac2tensor.tensor.</code><code class="descname">parse_heads_xml</code><span class="sig-paren">(</span><em>files_list</em>, <em>wfilter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/tensor.html#parse_heads_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.tensor.parse_heads_xml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the file with phrase heads and create a dict of
+<code class="docutils literal"><span class="pre">{(word0,</span> <span class="pre">link,</span> <span class="pre">word1):</span> <span class="pre">cnt}</span></code> corresponding to &#8220;gov&#8221;, &#8220;dep type&#8221;, &#8220;dep&#8221;
+tags in the source xml.
+Check</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>files_list</em> (list) &#8211; a list of files to process</div>
+<div class="line"><em>wfilter</em> (list) &#8211; a word filter, if a word is not present in the
+filter, it is skipped and not included into the tensor</div>
+</div>
+</dd>
+<dt>Returns:</dt>
+<dd><p class="first"><em>dict</em> &#8211; a dictionary of triple counts:</p>
+<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="p">{(</span><span class="s1">&#39;august-n&#39;</span><span class="p">,</span> <span class="s1">&#39;A2&#39;</span><span class="p">,</span> <span class="s1">&#39;surround-v&#39;</span><span class="p">):</span> <span class="mi">51</span><span class="p">,</span>
+ <span class="p">(</span><span class="s1">&#39;enquiry-n&#39;</span><span class="p">,</span> <span class="s1">&#39;A1&#39;</span><span class="p">,</span> <span class="s1">&#39;justify-v&#39;</span><span class="p">):</span> <span class="mi">200</span><span class="p">,</span>
+ <span class="p">(</span><span class="s1">&#39;september-n&#39;</span><span class="p">,</span> <span class="s1">&#39;AM-TMP&#39;</span><span class="p">,</span> <span class="s1">&#39;set-v&#39;</span><span class="p">):</span> <span class="mi">121</span><span class="p">,</span> <span class="o">...</span><span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.tensor.switch2pmi">
+<code class="descclassname">ukwac2tensor.tensor.</code><code class="descname">switch2pmi</code><span class="sig-paren">(</span><em>pdf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/tensor.html#switch2pmi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.tensor.switch2pmi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Using current tensor counts, compute pmi scores.
+Use equation: PMI&#8217; = log(p(w0,w1|link) / (p(w0|link)p(w1|link)))
+Once pmi scores are computed, replace current counts with pmi.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>pdf</em> (DataFrame) &#8211; tensor containing counts of word triples.</dd>
+<dt>Returns:</dt>
+<dd><em>dict</em> &#8211; new tensor dict containing pmi scores.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-ukwac2tensor.ukwac_converter">
+<span id="ukwac-converter-py"></span><span id="ukwac-converter"></span><h2>ukwac_converter.py<a class="headerlink" href="#module-ukwac2tensor.ukwac_converter" title="Permalink to this headline">¶</a></h2>
+<p>This script uses ukwac corpus as input for SENNA role labeler. SENNA processes
+sentences and returns the output which is collected and parsed in order to
+find governor and its dependant roles. The result is converted into xml
+representation and written to xml file.</p>
+<p>The script consists of two classes and several functions that work with these
+classes. Below is a <a class="reference external" href="https://en.wikipedia.org/wiki/Call_graph">call graph</a>
+visualization created with <a class="reference external" href="https://pycallgraph.readthedocs.org/en/master/">pycallgraph</a> library.</p>
+<div class="figure align-center" id="id6">
+<a class="reference internal image-reference" href="_images/ukwac.png"><img alt="_images/ukwac.png" src="_images/ukwac.png" style="width: 1476.45px; height: 574.6px;" /></a>
+<p class="caption"><span class="caption-text">execution diagram</span></p>
+</div>
+<p>Here is a brief description of the conversion procedure.</p>
+<dl class="docutils">
+<dt>Conversion procedure:</dt>
+<dd><ol class="first last arabic simple">
+<li>Read ukwac file contents.</li>
+<li>Normalize contents by removing non-utf8 symbols.</li>
+<li>Extract the sentences, word lemmas and Malt parser data.</li>
+<li>Expand various contractions like &#8220;I&#8217;m, you&#8217;re, let&#8217;s&#8221;.</li>
+<li>Write extracted ukwac sentences into an input file.</li>
+<li>Feed the input file to SENNA role labeler.</li>
+<li>Collect SENNA&#8217;s output, extract governors and dependants.</li>
+<li>Create xml representation.</li>
+<li>Write an xml file.</li>
+<li>Clean up input, output files.</li>
+</ol>
+</dd>
+<dt>Performance:</dt>
+<dd>It takes ~1h to process one ukwac file on Dual-Core AMD Opteron(R) 2.8Ghz.
+Using one of the Forbin machines, ~35-40 min.</dd>
+</dl>
+<dl class="class">
+<dt id="ukwac2tensor.ukwac_converter.SENNA">
+<em class="property">class </em><code class="descclassname">ukwac2tensor.ukwac_converter.</code><code class="descname">SENNA</code><span class="sig-paren">(</span><em>senna_bin</em>, <em>isqsub=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#SENNA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.SENNA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class that runs SENNA role labeler and incorporates other critical
+post-processing methods.</p>
+<dl class="method">
+<dt id="ukwac2tensor.ukwac_converter.SENNA._shell_call">
+<code class="descname">_shell_call</code><span class="sig-paren">(</span><em>input_file</em>, <em>output_file</em>, <em>crashed</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#SENNA._shell_call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.SENNA._shell_call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call SENNA binary from /senna dir.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>out_dir</em> (str) &#8211; output directory path</div>
+<div class="line"><em>input_file</em> (str) &#8211; input file name</div>
+<div class="line"><em>output_file</em> (str) &#8211; output file name</div>
+<div class="line"><em>crashed</em> (int) &#8211; number of SENNA crashes if any</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukwac2tensor.ukwac_converter.SENNA.clean_up">
+<code class="descname">clean_up</code><span class="sig-paren">(</span><em>out_dir</em>, <em>in_file</em>, <em>out_file</em>, <em>result_fname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#SENNA.clean_up"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.SENNA.clean_up" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove input and output files after conversion.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>out_dir</em> (str) &#8211;  output directory path</div>
+<div class="line"><em>in_file</em> (str) &#8211; input file name</div>
+<div class="line"><em>out_dir</em> (str) &#8211; output file name</div>
+<div class="line"><em>result_fname</em> (str) &#8211; final result file name</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukwac2tensor.ukwac_converter.SENNA.get_input_files">
+<code class="descname">get_input_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#SENNA.get_input_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.SENNA.get_input_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter for <code class="docutils literal"><span class="pre">self.input_files</span></code></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukwac2tensor.ukwac_converter.SENNA.get_output_files">
+<code class="descname">get_output_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#SENNA.get_output_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.SENNA.get_output_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter for <code class="docutils literal"><span class="pre">self.output_files</span></code></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ukwac2tensor.ukwac_converter.SENNA.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>sents</em>, <em>input_fname</em>, <em>output_fname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#SENNA.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.SENNA.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write extracted sentences into input file, invoke SENNA binary and
+keep output file name in a list.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>out_dir</em> (str) &#8211; output directory path</div>
+<div class="line"><em>sents</em> (str) &#8211; ukwac extracted sentences, separated with &#8220;``&#8221;</div>
+<div class="line"><em>input_fname</em> (str) &#8211; input file name</div>
+<div class="line"><em>output_fname</em> (str) &#8211; output file name</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ukwac2tensor.ukwac_converter.UkwacTools">
+<em class="property">class </em><code class="descclassname">ukwac2tensor.ukwac_converter.</code><code class="descname">UkwacTools</code><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#UkwacTools"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.UkwacTools" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class that represents a collection of static methods required to parse
+ukWaC corpus.
+&lt;Class implementation in order to wrap a mess of various string processing
+functions into a single class&gt;</p>
+<dl class="staticmethod">
+<dt id="ukwac2tensor.ukwac_converter.UkwacTools.add_vps">
+<em class="property">static </em><code class="descname">add_vps</code><span class="sig-paren">(</span><em>xml_tree</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#UkwacTools.add_vps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.UkwacTools.add_vps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search for verb phrases, merge verb particles with the verb
+(&#8220;make_out&#8221;) and modify the result output accordingly.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><a href="#id1"><span class="problematic" id="id2">|</span></a><em>xml_tree</em> (ElementTree root) &#8211; xml representation of a string</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt><a href="#id3"><span class="problematic" id="id4">|</span></a><em>xml_tree</em> (ElementTree root) &#8211; xml representation of a string</dt>
+<dd>with merged verb phrases.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.ukwac_converter.UkwacTools.append_to_xml">
+<em class="property">static </em><code class="descname">append_to_xml</code><span class="sig-paren">(</span><em>fname</em>, <em>root</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#UkwacTools.append_to_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.UkwacTools.append_to_xml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create xml file header, prettify xml structure and write xml
+representation of the sentences using <code class="docutils literal"><span class="pre">\r\n</span></code> as a separator.</p>
+<p>&lt;IMPORTANT! Take into account that output file shall contain sentences
+separated by <code class="docutils literal"><span class="pre">\r\n</span></code>. Head searching will not work otherwise. This
+is an ugly hack for <code class="docutils literal"><span class="pre">&lt;text</span> <span class="pre">id&gt;&lt;/text&gt;</span></code> tags to contain correct
+sentences.&gt;</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>fname</em> (str) &#8211; file name to write the data to</div>
+<div class="line"><em>root</em> (xml.etree object) &#8211; xml.etree root object</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.ukwac_converter.UkwacTools.clean_bad_chars">
+<em class="property">static </em><code class="descname">clean_bad_chars</code><span class="sig-paren">(</span><em>mess</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#UkwacTools.clean_bad_chars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.UkwacTools.clean_bad_chars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove some ukwac specific and non-utf8 chars from the file otherwise
+SENNA will generate skipped char warnings and it&#8217;s parsing quality will
+degrade.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>mess</em> (str) &#8211; file contents</dd>
+<dt>Returns:</dt>
+<dd><em>nice</em> (str) &#8211; file contents with bad chars removed</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.ukwac_converter.UkwacTools.clean_bad_chars_with_iconv">
+<em class="property">static </em><code class="descname">clean_bad_chars_with_iconv</code><span class="sig-paren">(</span><em>fname</em>, <em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#UkwacTools.clean_bad_chars_with_iconv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.UkwacTools.clean_bad_chars_with_iconv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use iconv to trim all bad utf-8 chars from the file.
+&lt;I didn&#8217;t notice if this method helps to get rid
+of SENNA&#8217;s skipped chars warning. Just leave it here as an example
+of possible solution to remove non-utf8 chars using shell utils.&gt;</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>fname</em> (str) &#8211; file path
+<em>data</em> (str) &#8211; file contents</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt><em>cleaned_data</em> (str) &#8211; file contents with non-utf8 chars removed</dt>
+<dd>using &#8220;iconv&#8221; tool.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.ukwac_converter.UkwacTools.get_dependants">
+<em class="property">static </em><code class="descname">get_dependants</code><span class="sig-paren">(</span><em>sent</em>, <em>idx</em>, <em>sent_chunk</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#UkwacTools.get_dependants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.UkwacTools.get_dependants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve roles for a given governor.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>sent</em> (list) &#8211; a list of word, POS-tag, word index and role</div>
+<div class="line-block">
+<div class="line">tuples:
+<code class="docutils literal"><span class="pre">[('first/JJ/3',</span> <span class="pre">('I-A1',)),</span> <span class="pre">('album/NN/4',</span> <span class="pre">('E-A1',))]</span></code></div>
+</div>
+<div class="line"><em>sent_chunk</em> (str) &#8211; ukwac tab separated column data</div>
+<div class="line"><em>idx</em> (int) &#8211; index to access correct ukwac column</div>
+</div>
+</dd>
+<dt>Returns:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>role_bag</em> (list) &#8211; a list of dicts where dep role is key and
+words, POS-tags, word indeces are values:
+ <code class="docutils literal"><span class="pre">[{'V':</span> <span class="pre">'justify/VB/20'},</span>
+&#160;&#160; <span class="pre">{'A1':</span> <span class="pre">'a/DT/21</span> <span class="pre">full/JJ/22</span> <span class="pre">enquiry/NN/23'}]</span></code></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.ukwac_converter.UkwacTools.get_governors">
+<em class="property">static </em><code class="descname">get_governors</code><span class="sig-paren">(</span><em>sent</em>, <em>sent_chunk</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#UkwacTools.get_governors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.UkwacTools.get_governors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve and return a list of governors &#8220;S-V&#8221; from sentence columns.
+&lt;if a column does not contain a governor an empty tuple is appended&gt;&#8221;</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>sent</em> (str) &#8211; a list of word, POS-tag, word index and role
+tuples:
+<code class="docutils literal"><span class="pre">[('first/JJ/3',</span> <span class="pre">('I-A1',)),</span> <span class="pre">('album/NN/4',</span> <span class="pre">('E-A1',))]</span></code></div>
+<div class="line"><em>sent_chunk</em> (str) &#8211; ukwac tab separated column data</div>
+</div>
+</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt><em>govs</em> (list) &#8211; a list of gov tuples:</dt>
+<dd><code class="docutils literal"><span class="pre">[('use/VBD/2',),</span> <span class="pre">('mark/VB/4',)]</span></code></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.ukwac_converter.UkwacTools.gzip_reader">
+<em class="property">static </em><code class="descname">gzip_reader</code><span class="sig-paren">(</span><em>fname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#UkwacTools.gzip_reader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.UkwacTools.gzip_reader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a .gz archive and return its contents as a string.
+If the file specified is not an archive it attempt to read it
+as a general file.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>fname</em> (str) &#8211; file path</dd>
+<dt>Returns:</dt>
+<dd><em>fdata</em> (str) &#8211; file contents</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.ukwac_converter.UkwacTools.gzip_xml">
+<em class="property">static </em><code class="descname">gzip_xml</code><span class="sig-paren">(</span><em>fname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#UkwacTools.gzip_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.UkwacTools.gzip_xml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read and compress specified file, remove original file.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>fname</em> (str) &#8211; file name</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.ukwac_converter.UkwacTools.include_malt">
+<em class="property">static </em><code class="descname">include_malt</code><span class="sig-paren">(</span><em>data_lines</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#UkwacTools.include_malt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.UkwacTools.include_malt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract parent-child information from source file that was generated
+by malt parser.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>data_lines</em> (list) &#8211; a list file sentences</dd>
+<dt>Returns:</dt>
+<dd><em>malt_dic</em> (dict) &#8211; a dict of sent number and its malt parse</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.ukwac_converter.UkwacTools.index_text_ids">
+<em class="property">static </em><code class="descname">index_text_ids</code><span class="sig-paren">(</span><em>cleaned_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#UkwacTools.index_text_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.UkwacTools.index_text_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect text ids and calculate sentences within &lt;text id&gt; &lt;/text&gt; tags
+in order to insert ids during xml building.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>cleaned_data</em> (str) &#8211; file contents with non-utf8 chars removed</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt><em>ids_index</em> (dict) &#8211; an ordered dict of url string and a number of</dt>
+<dd>sentences</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.ukwac_converter.UkwacTools.insert_sent_delims">
+<em class="property">static </em><code class="descname">insert_sent_delims</code><span class="sig-paren">(</span><em>sents</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#UkwacTools.insert_sent_delims"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.UkwacTools.insert_sent_delims" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert sentence delimiters.
+SENNA is quite sensitive to input which is not properly separated.
+In order to process each sentence correctly we insert &#8220;``&#8221; delimiters.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>sents</em> (str) &#8211; sentences extracted from ukwac corpus</dd>
+<dt>Returns:</dt>
+<dd><em>sentences separated with &#8220;``&#8221;</em></dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.ukwac_converter.UkwacTools.merge_POS">
+<em class="property">static </em><code class="descname">merge_POS</code><span class="sig-paren">(</span><em>sent</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#UkwacTools.merge_POS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.UkwacTools.merge_POS" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function merges XP and POS into one POS</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>sent</em> (str) &#8211; sentence string</dd>
+<dt>Returns:</dt>
+<dd><em>stack</em> (deque) &#8211; deque list of POS$ tags</dd>
+</dl>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ukwac2tensor.ukwac_converter.UkwacTools.reduce_contr">
+<em class="property">static </em><code class="descname">reduce_contr</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#UkwacTools.reduce_contr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.UkwacTools.reduce_contr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply a dictionary of common contractions.
+SENNA is not able to tokenize and assign a correct POS-tag to a
+contracted token. Applying contractions allows us to improve SENNA&#8217;s
+output.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>data</em> (tuple) &#8211; tuple pairs (word, lemma)</dd>
+<dt>Returns:</dt>
+<dd><em>ndata</em> (tuple) &#8211; tuple pairs (word, lemma)</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.ukwac_converter.build_xml">
+<code class="descclassname">ukwac2tensor.ukwac_converter.</code><code class="descname">build_xml</code><span class="sig-paren">(</span><em>lemmas</em>, <em>id_idx</em>, <em>result_fname</em>, <em>malt_data</em>, <em>pverbs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#build_xml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.build_xml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read output file and build its xml representation.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>lemmas</em> (dict) &#8211; dict of word -&gt; word lemma: <code class="docutils literal"><span class="pre">{'shops':</span> <span class="pre">'shop'}</span></code></div>
+<div class="line"><em>id_idx</em> (OrderedDict) &#8211; an ordered dict of url string and a number
+of sentences that belong to it</div>
+<div class="line"><em>result_fname</em> (str) &#8211; final result file name</div>
+<div class="line"><em>malt_data</em> (defaultdict) &#8211; Malt parser data extracted from ukwac
+files and converted into a dict
+<code class="docutils literal"><span class="pre">{sent</span> <span class="pre">number:</span> <span class="pre">parsed</span> <span class="pre">sent</span> <span class="pre">string}</span></code></div>
+<div class="line"><em>pverbs</em> (bool) &#8211; if True, find and add verb phrases</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.ukwac_converter.detect_missing_files">
+<code class="descclassname">ukwac2tensor.ukwac_converter.</code><code class="descname">detect_missing_files</code><span class="sig-paren">(</span><em>scan_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#detect_missing_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.detect_missing_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>For unknown reasons ukwac_converter.py might not process all ~3500 ukwac
+files. If this happens, use this function to scan for missed files.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.ukwac_converter.extract_ukwac_data">
+<code class="descclassname">ukwac2tensor.ukwac_converter.</code><code class="descname">extract_ukwac_data</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#extract_ukwac_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.extract_ukwac_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract 2 columns from ukwac files, create an ordered dict of
+(&#8220;word&#8221;, &#8220;lemma&#8221;) pairs and construct sentences for SENNA input.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>data</em> (str) &#8211; file contents</dd>
+<dt>Returns:</dt>
+<dd><div class="first last line-block">
+<div class="line"><em>norm_sents</em> (str) &#8211; sentences reconstructed from ukwac and
+separated by &#8220;``&#8221;</div>
+<div class="line"><em>dict_lemmas</em> (dict) &#8211; a dict of all words and their lemmas</div>
+<div class="line"><em>text_ids</em> (OrderedDict) &#8211; an ordered dict of url string and a
+number of sentences, that belong to this url. Used in order to
+provide source reference for extracted sentences</div>
+<div class="line"><em>include_malt_data</em> (dict) &#8211; dict of sentence number and malt parse
+data extracted from ukwac file</div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.ukwac_converter.get_contractions">
+<code class="descclassname">ukwac2tensor.ukwac_converter.</code><code class="descname">get_contractions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#get_contractions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.get_contractions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return special contractions dict.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ukwac2tensor.ukwac_converter.ukwac_convert">
+<code class="descclassname">ukwac2tensor.ukwac_converter.</code><code class="descname">ukwac_convert</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ukwac2tensor/ukwac_converter.html#ukwac_convert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ukwac2tensor.ukwac_converter.ukwac_convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main function.
+Call methods required for ukwac corpus conversion into xml representation.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><em>args</em> (dict) &#8211; parsed arguments specified at command line</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="output.html" class="btn btn-neutral float-right" title="Output description" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="usage.html" class="btn btn-neutral" title="Howto" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, tastyminerals.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

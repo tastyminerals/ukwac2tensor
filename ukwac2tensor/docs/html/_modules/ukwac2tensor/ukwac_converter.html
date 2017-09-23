@@ -1,0 +1,1120 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ukwac2tensor.ukwac_converter &mdash; ukwac2tensor 0.0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="ukwac2tensor 0.0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> ukwac2tensor
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Howto</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ukwac2tensor.html">ukwac2tensor scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../output.html">Output description</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">ukwac2tensor</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>ukwac2tensor.ukwac_converter</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for ukwac2tensor.ukwac_converter</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python2</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This script uses ukwac corpus as input for SENNA role labeler. SENNA processes</span>
+<span class="sd">sentences and returns the output which is collected and parsed in order to</span>
+<span class="sd">find governor and its dependant roles. The result is converted into xml</span>
+<span class="sd">representation and written to xml file.</span>
+
+<span class="sd">The script consists of two classes and several functions that work with these</span>
+<span class="sd">classes. Below is a `call graph &lt;https://en.wikipedia.org/wiki/Call_graph&gt;`_</span>
+<span class="sd">visualization created with `pycallgraph</span>
+<span class="sd">&lt;https://pycallgraph.readthedocs.org/en/master/&gt;`_ library.</span>
+
+<span class="sd">.. figure::  images/ukwac.png</span>
+<span class="sd">   :align:   center</span>
+<span class="sd">   :scale: 85%</span>
+
+<span class="sd">   execution diagram</span>
+
+<span class="sd">Here is a brief description of the conversion procedure.</span>
+
+<span class="sd">Conversion procedure:</span>
+<span class="sd">    1. Read ukwac file contents.</span>
+<span class="sd">    2. Normalize contents by removing non-utf8 symbols.</span>
+<span class="sd">    3. Extract the sentences, word lemmas and Malt parser data.</span>
+<span class="sd">    4. Expand various contractions like &quot;I&#39;m, you&#39;re, let&#39;s&quot;.</span>
+<span class="sd">    5. Write extracted ukwac sentences into an input file.</span>
+<span class="sd">    6. Feed the input file to SENNA role labeler.</span>
+<span class="sd">    7. Collect SENNA&#39;s output, extract governors and dependants.</span>
+<span class="sd">    8. Create xml representation.</span>
+<span class="sd">    9. Write an xml file.</span>
+<span class="sd">    10. Clean up input, output files.</span>
+
+<span class="sd">Performance:</span>
+<span class="sd">    It takes ~1h to process one ukwac file on Dual-Core AMD Opteron(R) 2.8Ghz.</span>
+<span class="sd">    Using one of the Forbin machines, ~35-40 min.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">gzip</span>
+<span class="kn">import</span> <span class="nn">subprocess</span> <span class="k">as</span> <span class="nn">sb</span>
+<span class="kn">import</span> <span class="nn">xml.etree.ElementTree</span> <span class="k">as</span> <span class="nn">et</span>
+<span class="kn">import</span> <span class="nn">xml.dom.minidom</span> <span class="k">as</span> <span class="nn">mdom</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+
+<span class="kn">from</span> <span class="nn">socket</span> <span class="k">import</span> <span class="n">gethostname</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">izip</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">deque</span><span class="p">,</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">OrderedDict</span> <span class="k">as</span> <span class="n">od</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;p.shkadzko@gmail.com&quot;</span>
+
+
+<span class="c1">### uncomment below to generate script execution .png graph</span>
+<span class="c1"># from pycallgraph import PyCallGraph</span>
+<span class="c1"># from pycallgraph.output import GraphvizOutput</span>
+
+
+<div class="viewcode-block" id="detect_missing_files"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.detect_missing_files">[docs]</a><span class="k">def</span> <span class="nf">detect_missing_files</span><span class="p">(</span><span class="n">scan_dir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;For unknown reasons ukwac_converter.py might not process all ~3500 ukwac</span>
+<span class="sd">    files. If this happens, use this function to scan for missed files.&quot;&quot;&quot;</span>
+    <span class="n">proc</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s1">&#39;ls&#39;</span><span class="p">,</span> <span class="s1">&#39;parallelized_5000_nowiki&#39;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">sb</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+    <span class="n">ukwac</span><span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">][</span><span class="mi">4</span><span class="p">:]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()])</span>
+    <span class="n">proc</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s1">&#39;ls&#39;</span><span class="p">,</span> <span class="n">scan_dir</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">sb</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+    <span class="n">conv</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">][</span><span class="mi">4</span><span class="p">:]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()])</span>
+    <span class="n">missed</span> <span class="o">=</span> <span class="n">ukwac</span> <span class="o">-</span> <span class="n">conv</span>
+    <span class="c1"># printing the commands to process the missing files</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">missed</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;qsub -cwd -V -t 1-1:1 -b y ./ukwac_converter.py -qs -f parallelized_5000_nowiki/ukwac.fixed-nowiki.node</span><span class="si">%04d</span><span class="s1">.gz&#39;</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="UkwacTools"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.UkwacTools">[docs]</a><span class="k">class</span> <span class="nc">UkwacTools</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class that represents a collection of static methods required to parse</span>
+<span class="sd">    ukWaC corpus.</span>
+<span class="sd">    &lt;Class implementation in order to wrap a mess of various string processing</span>
+<span class="sd">    functions into a single class&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="UkwacTools.gzip_reader"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.UkwacTools.gzip_reader">[docs]</a>    <span class="k">def</span> <span class="nf">gzip_reader</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read a .gz archive and return its contents as a string.</span>
+<span class="sd">        If the file specified is not an archive it attempt to read it</span>
+<span class="sd">        as a general file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *fname* (str) -- file path</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *fdata* (str) -- file contents</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">fdata</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">fdata</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="c1"># return clean_bad_chars(fdata)</span>
+        <span class="k">return</span> <span class="n">fdata</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="UkwacTools.clean_bad_chars_with_iconv"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.UkwacTools.clean_bad_chars_with_iconv">[docs]</a>    <span class="k">def</span> <span class="nf">clean_bad_chars_with_iconv</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use iconv to trim all bad utf-8 chars from the file.</span>
+<span class="sd">        &lt;I didn&#39;t notice if this method helps to get rid</span>
+<span class="sd">        of SENNA&#39;s skipped chars warning. Just leave it here as an example</span>
+<span class="sd">        of possible solution to remove non-utf8 chars using shell utils.&gt;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *fname* (str) -- file path</span>
+<span class="sd">            *data* (str) -- file contents</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *cleaned_data* (str) -- file contents with non-utf8 chars removed</span>
+<span class="sd">             using &quot;iconv&quot; tool.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span> <span class="o">+</span> <span class="s1">&#39;_temp&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">sb</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s1">&#39;iconv -f utf-8 -t utf-8 -c </span><span class="si">%s</span><span class="s1"> &gt; </span><span class="si">%s</span><span class="s1">&#39;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">fname</span> <span class="o">+</span> <span class="s1">&#39;_temp&#39;</span><span class="p">,</span> <span class="n">fname</span> <span class="o">+</span> <span class="s1">&#39;_clean&#39;</span><span class="p">),</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span> <span class="o">+</span> <span class="s1">&#39;_clean&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">cleaned_data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fname</span> <span class="o">+</span> <span class="s1">&#39;_temp&#39;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fname</span> <span class="o">+</span> <span class="s1">&#39;_clean&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cleaned_data</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="UkwacTools.reduce_contr"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.UkwacTools.reduce_contr">[docs]</a>    <span class="k">def</span> <span class="nf">reduce_contr</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply a dictionary of common contractions.</span>
+<span class="sd">        SENNA is not able to tokenize and assign a correct POS-tag to a</span>
+<span class="sd">        contracted token. Applying contractions allows us to improve SENNA&#39;s</span>
+<span class="sd">        output.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *data* (tuple) -- tuple pairs (word, lemma)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *ndata* (tuple) -- tuple pairs (word, lemma)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cntr</span> <span class="o">=</span> <span class="n">get_contractions</span><span class="p">()</span>
+        <span class="n">reps</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">cntr</span><span class="o">.</span><span class="n">iteritems</span><span class="p">())</span>
+        <span class="n">rpatt</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;|&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">reps</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="n">ndata</span> <span class="o">=</span> <span class="n">rpatt</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">reps</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">))],</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ndata</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="UkwacTools.index_text_ids"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.UkwacTools.index_text_ids">[docs]</a>    <span class="k">def</span> <span class="nf">index_text_ids</span><span class="p">(</span><span class="n">cleaned_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect text ids and calculate sentences within &lt;text id&gt; &lt;/text&gt; tags</span>
+<span class="sd">        in order to insert ids during xml building.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *cleaned_data* (str) -- file contents with non-utf8 chars removed</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *ids_index* (dict) -- an ordered dict of url string and a number of</span>
+<span class="sd">             sentences</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rtext_id</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;&lt;text id=&quot;(.*)&quot;&gt;&#39;</span><span class="p">)</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="n">rtext_id</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">cleaned_data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ids</span><span class="p">:</span> <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">ids_index</span> <span class="o">=</span> <span class="n">od</span><span class="p">()</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">cleaned_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&lt;text id=&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">segment</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="n">ids_index</span><span class="p">[</span><span class="n">ids</span><span class="p">[</span><span class="n">n</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">segment</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&lt;s&gt;&#39;</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">ids_index</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="UkwacTools.include_malt"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.UkwacTools.include_malt">[docs]</a>    <span class="k">def</span> <span class="nf">include_malt</span><span class="p">(</span><span class="n">data_lines</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract parent-child information from source file that was generated</span>
+<span class="sd">        by malt parser.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *data_lines* (list) -- a list file sentences</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *malt_dic* (dict) -- a dict of sent number and its malt parse</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">malt_dic</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+        <span class="n">sent</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">goodline</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;.+ .+ [0-9]+ [0-9]+ [A-Z]+&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">data_lines</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">line</span> <span class="o">==</span> <span class="s1">&#39;&lt;s&gt; &lt;S&gt;&#39;</span><span class="p">:</span>
+                <span class="n">sent</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">malt_dic</span><span class="p">[</span><span class="n">sent</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="k">elif</span> <span class="n">line</span> <span class="o">==</span> <span class="s1">&#39;&lt;/s&gt; &lt;S&gt;&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">:</span>  <span class="c1"># malt data is messy</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">l</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
+                <span class="n">l</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">nline</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">goodline</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">nline</span><span class="p">):</span>
+                    <span class="n">malt_dic</span><span class="p">[</span><span class="n">sent</span><span class="p">]</span> <span class="o">+=</span> <span class="n">nline</span>
+        <span class="k">return</span> <span class="n">malt_dic</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="UkwacTools.clean_bad_chars"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.UkwacTools.clean_bad_chars">[docs]</a>    <span class="k">def</span> <span class="nf">clean_bad_chars</span><span class="p">(</span><span class="n">mess</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove some ukwac specific and non-utf8 chars from the file otherwise</span>
+<span class="sd">        SENNA will generate skipped char warnings and it&#39;s parsing quality will</span>
+<span class="sd">        degrade.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *mess* (str) -- file contents</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *nice* (str) -- file contents with bad chars removed</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mess0</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">r&#39;’&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">mess</span><span class="p">)</span>  <span class="c1"># replace &quot;’&quot;</span>
+        <span class="n">mess1</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">r&#39;[^\x00-\x7F]+&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">mess0</span><span class="p">)</span>  <span class="c1"># remove non utf8 chars</span>
+        <span class="n">mess2</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">r&#39;&amp;&#39;</span><span class="p">,</span> <span class="s1">&#39;&amp;amp;&#39;</span><span class="p">,</span> <span class="n">mess1</span><span class="p">)</span>
+        <span class="c1"># hardcore removal, maybe this alone is enough</span>
+        <span class="n">bad_chars</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\x81\x8d\x8f\x90\x9d\x01\x03\x0b\x17\x1a\x1c\x1d\x05</span><span class="s1">&#39;</span> \
+                    <span class="s1">&#39;</span><span class="se">\x06\x07\x10\x11\x12\x13\x14\x15\x16\x18\x1a\x19\x1e</span><span class="s1">&#39;</span> \
+                    <span class="s1">&#39;</span><span class="se">\x1f\x04\x02\x08\x0c\x0e\x0f\x1b</span><span class="s1">&#39;</span>
+        <span class="n">nice</span> <span class="o">=</span> <span class="n">mess2</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">bad_chars</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nice</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="UkwacTools.insert_sent_delims"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.UkwacTools.insert_sent_delims">[docs]</a>    <span class="k">def</span> <span class="nf">insert_sent_delims</span><span class="p">(</span><span class="n">sents</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Insert sentence delimiters.</span>
+<span class="sd">        SENNA is quite sensitive to input which is not properly separated.</span>
+<span class="sd">        In order to process each sentence correctly we insert &quot;``&quot; delimiters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *sents* (str) -- sentences extracted from ukwac corpus</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *sentences separated with &quot;\`\`&quot;*</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sep_sents</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">s</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">``</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">])</span>
+                          <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sents</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sep_sents</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="UkwacTools.gzip_xml"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.UkwacTools.gzip_xml">[docs]</a>    <span class="k">def</span> <span class="nf">gzip_xml</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read and compress specified file, remove original file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *fname* (str) -- file name</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">fdata</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fname</span> <span class="o">+</span> <span class="s1">&#39;.gz&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">gf</span><span class="p">:</span>
+            <span class="n">gf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fdata</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+        <span class="nb">print</span> <span class="n">fname</span> <span class="o">+</span> <span class="s1">&#39;.gz successfully archived&#39;</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="UkwacTools.merge_POS"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.UkwacTools.merge_POS">[docs]</a>    <span class="k">def</span> <span class="nf">merge_POS</span><span class="p">(</span><span class="n">sent</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function merges XP and POS into one POS</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *sent* (str) -- sentence string</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *stack* (deque) -- deque list of POS$ tags</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="n">deque</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">sent</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">r&#39;.*/POS$&#39;</span><span class="p">,</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">stack</span><span class="p">:</span> <span class="k">continue</span>  <span class="c1"># because single quote can tagged POS</span>
+                <span class="n">prev_w</span><span class="p">,</span> <span class="n">prev_tag</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">new_w</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">prev_w</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="n">new_w</span><span class="p">,</span> <span class="n">prev_tag</span><span class="p">)</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">stack</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="UkwacTools.append_to_xml"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.UkwacTools.append_to_xml">[docs]</a>    <span class="k">def</span> <span class="nf">append_to_xml</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create xml file header, prettify xml structure and write xml</span>
+<span class="sd">        representation of the sentences using ``\\r\\n`` as a separator.</span>
+
+<span class="sd">        &lt;IMPORTANT! Take into account that output file shall contain sentences</span>
+<span class="sd">        separated by ``\\r\\n``. Head searching will not work otherwise. This</span>
+<span class="sd">        is an ugly hack for ``&lt;text id&gt;&lt;/text&gt;`` tags to contain correct</span>
+<span class="sd">        sentences.&gt;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            | *fname* (str) -- file name to write the data to</span>
+<span class="sd">            | *root* (xml.etree object) -- xml.etree root object</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rxml_header</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;&lt;\?xml version=&quot;1.0&quot; \?&gt;&#39;</span><span class="p">)</span>
+        <span class="n">ugly</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;xml&#39;</span><span class="p">)</span>
+        <span class="n">parsed_xml</span> <span class="o">=</span> <span class="n">mdom</span><span class="o">.</span><span class="n">parseString</span><span class="p">(</span><span class="n">ugly</span><span class="p">)</span>
+        <span class="n">nice_xml</span> <span class="o">=</span> <span class="n">parsed_xml</span><span class="o">.</span><span class="n">toprettyxml</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">even_more_nice_xml</span> <span class="o">=</span> <span class="n">rxml_header</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">nice_xml</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">even_more_nice_xml</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>  <span class="c1"># delimiter required by head_searcher</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="UkwacTools.get_governors"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.UkwacTools.get_governors">[docs]</a>    <span class="k">def</span> <span class="nf">get_governors</span><span class="p">(</span><span class="n">sent</span><span class="p">,</span> <span class="n">sent_chunk</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve and return a list of governors &quot;S-V&quot; from sentence columns.</span>
+<span class="sd">        &lt;if a column does not contain a governor an empty tuple is appended&gt;&quot;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            | *sent* (str) -- a list of word, POS-tag, word index and role</span>
+<span class="sd">               tuples:</span>
+<span class="sd">               ``[(&#39;first/JJ/3&#39;, (&#39;I-A1&#39;,)), (&#39;album/NN/4&#39;, (&#39;E-A1&#39;,))]``</span>
+<span class="sd">            | *sent_chunk* (str) -- ukwac tab separated column data</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            *govs* (list) -- a list of gov tuples:</span>
+<span class="sd">             ``[(&#39;use/VBD/2&#39;,), (&#39;mark/VB/4&#39;,)]``</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">govs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sent</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])):</span>
+            <span class="n">govs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">tuple</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sent</span> <span class="k">if</span> <span class="s1">&#39;S-V&#39;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]]))</span>
+        <span class="k">return</span> <span class="n">govs</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="UkwacTools.get_dependants"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.UkwacTools.get_dependants">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependants</span><span class="p">(</span><span class="n">sent</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">sent_chunk</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve roles for a given governor.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            | *sent* (list) -- a list of word, POS-tag, word index and role</span>
+<span class="sd">            |  tuples:</span>
+<span class="sd">                ``[(&#39;first/JJ/3&#39;, (&#39;I-A1&#39;,)), (&#39;album/NN/4&#39;, (&#39;E-A1&#39;,))]``</span>
+<span class="sd">            | *sent_chunk* (str) -- ukwac tab separated column data</span>
+<span class="sd">            | *idx* (int) -- index to access correct ukwac column</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            | *role_bag* (list) -- a list of dicts where dep role is key and</span>
+<span class="sd">               words, POS-tags, word indeces are values:</span>
+<span class="sd">                ``[{&#39;V&#39;: &#39;justify/VB/20&#39;},</span>
+<span class="sd">                  {&#39;A1&#39;: &#39;a/DT/21 full/JJ/22 enquiry/NN/23&#39;}]``</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rarg</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;(?![O])[A-Z0-9\-]+&#39;</span><span class="p">)</span>
+        <span class="c1"># in case of bad parsing</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">dep_roles</span> <span class="o">=</span> <span class="p">[(</span><span class="n">rarg</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">idx</span><span class="p">])</span><span class="o">.</span><span class="n">group</span><span class="p">(),</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">sent</span>
+                         <span class="k">if</span> <span class="n">rarg</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">idx</span><span class="p">])]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">dep_roles</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="n">role_bag</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">role_chunk</span> <span class="o">=</span> <span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">dep_roles</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">r&#39;B-&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">role_chunk</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">r&#39;I-&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">role_chunk</span> <span class="o">+=</span> <span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">r&#39;E-&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">role_chunk</span> <span class="o">+=</span> <span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span>
+                <span class="n">role_bag</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;[CBIE]-&#39;</span><span class="p">):</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">role_chunk</span><span class="p">)})</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">role_bag</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;S-&#39;</span><span class="p">):</span> <span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">]})</span>
+                <span class="k">continue</span>
+        <span class="k">return</span> <span class="n">role_bag</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="UkwacTools.add_vps"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.UkwacTools.add_vps">[docs]</a>    <span class="k">def</span> <span class="nf">add_vps</span><span class="p">(</span><span class="n">xml_tree</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Search for verb phrases, merge verb particles with the verb</span>
+<span class="sd">        (&quot;make_out&quot;) and modify the result output accordingly.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            |*xml_tree* (ElementTree root) -- xml representation of a string</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            |*xml_tree* (ElementTree root) -- xml representation of a string</span>
+<span class="sd">             with merged verb phrases.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">check_match</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">vpi</span><span class="p">,</span> <span class="n">tok</span><span class="p">,</span> <span class="n">toki</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Check word and index match.&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">tok</span> <span class="o">==</span> <span class="n">vp</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="p">(</span><span class="n">toki</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">vpi</span><span class="p">)</span> <span class="ow">or</span>
+                                                    <span class="nb">abs</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">toki</span><span class="p">)</span><span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">vpi</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># regex for verb</span>
+        <span class="n">rxvb</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;([^ ]+) v[a-z]{1,3} ([0-9]+) [0-9]+&#39;</span><span class="p">)</span>
+        <span class="c1"># regex for particle</span>
+        <span class="n">rxpr</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;([^ ]+) (rp|in|rb|to) [0-9]+ ([0-9]+) (prt)&#39;</span><span class="p">)</span>
+        <span class="c1"># regex for verb and particle merge</span>
+        <span class="n">rpsub</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;([^ ]+) (v[a-z]+)&#39;</span><span class="p">)</span>
+
+        <span class="c1"># store found verb phrases</span>
+        <span class="n">verb_phrase</span> <span class="o">=</span> <span class="n">od</span><span class="p">()</span>
+        <span class="c1"># search for phrasal verbs in malt block</span>
+        <span class="k">for</span> <span class="n">xml_elem</span> <span class="ow">in</span> <span class="n">xml_tree</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">xml_elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;malt&#39;</span><span class="p">:</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">malt_block</span> <span class="o">=</span> <span class="n">xml_elem</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">malt_block</span><span class="p">[</span><span class="n">start</span><span class="p">:]):</span>
+                    <span class="n">vb_matched</span> <span class="o">=</span> <span class="n">rxvb</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">vb_matched</span><span class="p">:</span>
+                        <span class="n">start</span> <span class="o">=</span> <span class="n">n</span>
+                        <span class="c1"># accumulate vp particles and preps</span>
+                        <span class="n">prlines</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">vbline</span><span class="p">,</span> <span class="n">vb_idx</span> <span class="o">=</span> <span class="n">vb_matched</span><span class="o">.</span><span class="n">string</span><span class="p">,</span> <span class="n">vb_matched</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                        <span class="c1"># save the indeces and matched strings</span>
+                        <span class="c1"># search for particle</span>
+                        <span class="k">for</span> <span class="n">pline</span> <span class="ow">in</span> <span class="n">malt_block</span><span class="p">[</span><span class="n">start</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:]:</span>
+                            <span class="n">pr_matched</span> <span class="o">=</span> <span class="n">rxpr</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pline</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">pr_matched</span><span class="p">:</span>
+                                <span class="n">prline</span> <span class="o">=</span> <span class="n">pr_matched</span><span class="o">.</span><span class="n">string</span>
+                                <span class="n">pr</span><span class="p">,</span> <span class="n">pr_link</span> <span class="o">=</span> <span class="n">pr_matched</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">pr_matched</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                                <span class="c1"># check if found particle links to previous verb</span>
+                                <span class="k">if</span> <span class="n">pr_link</span> <span class="o">!=</span> <span class="n">vb_idx</span><span class="p">:</span>
+                                    <span class="k">continue</span>
+                                <span class="c1"># merge a particle with a prhasal verb</span>
+                                <span class="n">new_vbline</span> <span class="o">=</span> <span class="n">rpsub</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">r&#39;\1_</span><span class="si">{0}</span><span class="s1"> \2&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pr</span><span class="p">),</span>
+                                                       <span class="n">vbline</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                                <span class="c1"># merge malt block</span>
+                                <span class="n">malt_block</span><span class="p">[</span><span class="n">malt_block</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">vbline</span><span class="p">)]</span> <span class="o">=</span> <span class="n">new_vbline</span>
+                                <span class="n">vbline</span> <span class="o">=</span> <span class="n">new_vbline</span>
+                                <span class="n">prlines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prline</span><span class="p">)</span>
+                        <span class="n">verb_phrase</span><span class="p">[</span><span class="n">vbline</span><span class="p">]</span> <span class="o">=</span> <span class="n">prlines</span>
+                <span class="c1"># remove non vp keys</span>
+                <span class="n">verb_phrase</span> <span class="o">=</span> <span class="n">od</span><span class="p">((</span><span class="n">vp</span><span class="p">,</span> <span class="n">verb_phrase</span><span class="p">[</span><span class="n">vp</span><span class="p">])</span> <span class="k">for</span> <span class="n">vp</span> <span class="ow">in</span> <span class="n">verb_phrase</span>
+                                 <span class="k">if</span> <span class="n">verb_phrase</span><span class="p">[</span><span class="n">vp</span><span class="p">])</span>
+                <span class="n">xml_elem</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">malt_block</span><span class="p">)</span>
+            <span class="c1"># process SENNA block</span>
+            <span class="c1"># insert vp into lemsent</span>
+            <span class="k">elif</span> <span class="n">xml_elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;lemsent&#39;</span><span class="p">:</span>
+                <span class="n">lemsent</span> <span class="o">=</span> <span class="n">xml_elem</span><span class="o">.</span><span class="n">text</span>
+                <span class="n">lemsent_lst</span> <span class="o">=</span> <span class="n">lemsent</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">vp</span> <span class="ow">in</span> <span class="n">verb_phrase</span><span class="p">:</span>
+                    <span class="n">vp</span><span class="p">,</span> <span class="n">vi</span> <span class="o">=</span> <span class="n">vp</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">ti</span><span class="p">,</span> <span class="n">tok</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lemsent_lst</span><span class="p">[:],</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">check_match</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">vi</span><span class="p">,</span> <span class="n">tok</span><span class="p">,</span> <span class="n">ti</span><span class="p">):</span>
+                            <span class="n">lemsent_lst</span><span class="p">[</span><span class="n">ti</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">vp</span>
+                            <span class="k">break</span>
+                <span class="c1"># rejoin the merged vps with the rest of the sentence</span>
+                <span class="n">xml_elem</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lemsent_lst</span><span class="p">)</span>
+            <span class="c1"># insert vp into predicates block</span>
+            <span class="k">elif</span> <span class="n">xml_elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;predicate&#39;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">vp</span> <span class="ow">in</span> <span class="n">verb_phrase</span><span class="p">:</span>
+                    <span class="n">vp</span><span class="p">,</span> <span class="n">vi</span> <span class="o">=</span> <span class="n">vp</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">xml_elem</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;governor&#39;</span><span class="p">:</span>
+                            <span class="n">gov</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">govi</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">check_match</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">vi</span><span class="p">,</span> <span class="n">gov</span><span class="p">,</span> <span class="n">govi</span><span class="p">):</span>
+                                <span class="n">elem</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">vp</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">govi</span><span class="p">])</span>
+                        <span class="k">elif</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;dependencies&#39;</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">elem</span><span class="p">:</span>
+                                <span class="n">el_lst</span> <span class="o">=</span> <span class="n">el</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                                <span class="k">for</span> <span class="n">dep_tok</span> <span class="ow">in</span> <span class="n">el_lst</span><span class="p">:</span>
+                                    <span class="n">dep</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">depi</span> <span class="o">=</span> <span class="n">dep_tok</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+                                    <span class="k">if</span> <span class="n">check_match</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">vi</span><span class="p">,</span> <span class="n">dep</span><span class="p">,</span> <span class="n">depi</span><span class="p">):</span>
+                                        <span class="n">el_lst</span><span class="p">[</span><span class="n">el_lst</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">dep_tok</span><span class="p">)]</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">vp</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">depi</span><span class="p">])</span>
+                                        <span class="k">break</span>
+                                <span class="n">el</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">el_lst</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">xml_tree</span></div></div>
+
+
+<div class="viewcode-block" id="SENNA"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.SENNA">[docs]</a><span class="k">class</span> <span class="nc">SENNA</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class that runs SENNA role labeler and incorporates other critical</span>
+<span class="sd">    post-processing methods.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">senna_bin</span><span class="p">,</span> <span class="n">isqsub</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            | *senna_bin* (str) -- path to SENNA dir</span>
+<span class="sd">            | *isqsub* (bool) -- if True, use forbin grid engine</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">senna_bin</span> <span class="o">=</span> <span class="n">senna_bin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qsub</span> <span class="o">=</span> <span class="n">isqsub</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_files</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="SENNA._shell_call"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.SENNA._shell_call">[docs]</a>    <span class="k">def</span> <span class="nf">_shell_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">crashed</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call SENNA binary from /senna dir.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            | *out_dir* (str) -- output directory path</span>
+<span class="sd">            | *input_file* (str) -- input file name</span>
+<span class="sd">            | *output_file* (str) -- output file name</span>
+<span class="sd">            | *crashed* (int) -- number of SENNA crashes if any</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">curpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="s1">&#39;senna&#39;</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">senna_bin</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;senna-linux64&#39;</span><span class="p">))</span>
+        <span class="n">input_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">curpath</span><span class="p">,</span> <span class="n">input_file</span><span class="p">)</span>
+        <span class="n">output_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">curpath</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+        <span class="n">call</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">senna_bin</span><span class="p">,</span> <span class="s1">&#39; -usrtokens &lt; &#39;</span><span class="p">,</span> <span class="n">input_file_path</span><span class="p">,</span>
+                        <span class="s1">&#39; &gt; &#39;</span><span class="p">,</span> <span class="n">output_file_path</span><span class="p">])</span>
+        <span class="nb">print</span> <span class="s1">&#39;running SENNA...&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sb</span><span class="o">.</span><span class="n">check_call</span><span class="p">([</span><span class="n">call</span><span class="p">],</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">sb</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: calling SENNA binary, please see &quot;</span>
+                  <span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">SENNA._shell_call()</span><span class="se">\&quot;</span><span class="s2"> method&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SENNA.run"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.SENNA.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sents</span><span class="p">,</span> <span class="n">input_fname</span><span class="p">,</span> <span class="n">output_fname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write extracted sentences into input file, invoke SENNA binary and</span>
+<span class="sd">        keep output file name in a list.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            | *out_dir* (str) -- output directory path</span>
+<span class="sd">            | *sents* (str) -- ukwac extracted sentences, separated with &quot;\`\`&quot;</span>
+<span class="sd">            | *input_fname* (str) -- input file name</span>
+<span class="sd">            | *output_fname* (str) -- output file name</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sents_list</span> <span class="o">=</span> <span class="n">sents</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">``</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span> <span class="s1">&#39;sentences extracted:&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sents_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="nb">print</span> <span class="s1">&#39;SENNA READS:&#39;</span><span class="p">,</span> <span class="n">input_fname</span>
+        <span class="nb">print</span> <span class="s1">&#39;SENNA READS:&#39;</span><span class="p">,</span> <span class="n">output_fname</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">input_fname</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">sents</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;EXCEPTION on </span><span class="si">{0}</span><span class="se">\n</span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gethostname</span><span class="p">(),</span> <span class="n">ex</span><span class="p">))</span>
+            <span class="n">exit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shell_call</span><span class="p">(</span><span class="n">input_fname</span><span class="p">,</span> <span class="n">output_fname</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_fname</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SENNA.clean_up"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.SENNA.clean_up">[docs]</a>    <span class="k">def</span> <span class="nf">clean_up</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">in_file</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">result_fname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove input and output files after conversion.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            | *out_dir* (str) --  output directory path</span>
+<span class="sd">            | *in_file* (str) -- input file name</span>
+<span class="sd">            | *out_dir* (str) -- output file name</span>
+<span class="sd">            | *result_fname* (str) -- final result file name</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">qsub</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sb</span><span class="o">.</span><span class="n">call</span><span class="p">([</span><span class="s1">&#39;ssh&#39;</span><span class="p">,</span> <span class="s1">&#39;forbin&#39;</span><span class="p">])</span>
+                <span class="n">sb</span><span class="o">.</span><span class="n">call</span><span class="p">([</span><span class="s1">&#39;mv&#39;</span><span class="p">,</span> <span class="n">result_fname</span><span class="o">+</span><span class="s1">&#39;.gz&#39;</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">])</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">):</span>
+                <span class="nb">print</span> <span class="s1">&#39;ERROR: could not ssh into forbin&#39;</span>
+                <span class="nb">print</span> <span class="s1">&#39;ERROR: mv result_fname to $out_dir&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">f1</span><span class="p">,</span> <span class="n">f2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_files</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_files</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f1</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f2</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">):</span>
+            <span class="nb">print</span> <span class="s1">&#39;Could not remove files:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_files</span><span class="p">,</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">output_files</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">in_file</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">out_file</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">):</span>
+            <span class="nb">print</span> <span class="s1">&#39;Could not remove files:&#39;</span><span class="p">,</span> <span class="n">in_file</span><span class="p">,</span> <span class="n">out_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_files</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="SENNA.get_output_files"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.SENNA.get_output_files">[docs]</a>    <span class="k">def</span> <span class="nf">get_output_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Getter for ``self.output_files``&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_files</span></div>
+
+<div class="viewcode-block" id="SENNA.get_input_files"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.SENNA.get_input_files">[docs]</a>    <span class="k">def</span> <span class="nf">get_input_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Getter for ``self.input_files``&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_files</span></div></div>
+
+
+<div class="viewcode-block" id="extract_ukwac_data"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.extract_ukwac_data">[docs]</a><span class="k">def</span> <span class="nf">extract_ukwac_data</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract 2 columns from ukwac files, create an ordered dict of</span>
+<span class="sd">    (&quot;word&quot;, &quot;lemma&quot;) pairs and construct sentences for SENNA input.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        *data* (str) -- file contents</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        | *norm_sents* (str) -- sentences reconstructed from ukwac and</span>
+<span class="sd">           separated by &quot;\`\`&quot;</span>
+<span class="sd">        | *dict_lemmas* (dict) -- a dict of all words and their lemmas</span>
+<span class="sd">        | *text_ids* (OrderedDict) -- an ordered dict of url string and a</span>
+<span class="sd">           number of sentences, that belong to this url. Used in order to</span>
+<span class="sd">           provide source reference for extracted sentences</span>
+<span class="sd">        | *include_malt_data* (dict) -- dict of sentence number and malt parse</span>
+<span class="sd">           data extracted from ukwac file</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">clean_data</span> <span class="o">=</span> <span class="n">UkwacTools</span><span class="o">.</span><span class="n">clean_bad_chars</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">id_index</span> <span class="o">=</span> <span class="n">UkwacTools</span><span class="o">.</span><span class="n">index_text_ids</span><span class="p">(</span><span class="n">clean_data</span><span class="p">)</span>
+    <span class="n">rtext</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;&lt;/?text&gt;?&#39;</span><span class="p">)</span>
+    <span class="n">rlabel</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;(&lt;/?s&gt;)&#39;</span><span class="p">)</span>
+    <span class="n">cdata</span> <span class="o">=</span> <span class="n">rtext</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">clean_data</span><span class="p">)</span>
+    <span class="n">lcdata</span> <span class="o">=</span> <span class="n">rlabel</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">r&#39;\1 &lt;S&gt;&#39;</span><span class="p">,</span> <span class="n">cdata</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lcdata</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)]</span>
+    <span class="n">chunks</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span>
+    <span class="n">dict_lemmas</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span>
+    <span class="n">sents</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">])</span>
+    <span class="n">norm_sents</span> <span class="o">=</span> <span class="n">UkwacTools</span><span class="o">.</span><span class="n">insert_sent_delims</span><span class="p">(</span><span class="n">UkwacTools</span><span class="o">.</span><span class="n">reduce_contr</span><span class="p">(</span><span class="n">sents</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">norm_sents</span><span class="p">,</span> <span class="n">dict_lemmas</span><span class="p">,</span> <span class="n">id_index</span><span class="p">,</span> <span class="n">UkwacTools</span><span class="o">.</span><span class="n">include_malt</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="build_xml"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.build_xml">[docs]</a><span class="k">def</span> <span class="nf">build_xml</span><span class="p">(</span><span class="n">lemmas</span><span class="p">,</span> <span class="n">id_idx</span><span class="p">,</span> <span class="n">result_fname</span><span class="p">,</span> <span class="n">malt_data</span><span class="p">,</span> <span class="n">pverbs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read output file and build its xml representation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        | *lemmas* (dict) -- dict of word -&gt; word lemma: ``{&#39;shops&#39;: &#39;shop&#39;}``</span>
+<span class="sd">        | *id_idx* (OrderedDict) -- an ordered dict of url string and a number</span>
+<span class="sd">           of sentences that belong to it</span>
+<span class="sd">        | *result_fname* (str) -- final result file name</span>
+<span class="sd">        | *malt_data* (defaultdict) -- Malt parser data extracted from ukwac</span>
+<span class="sd">           files and converted into a dict</span>
+<span class="sd">           ``{sent number: parsed sent string}``</span>
+<span class="sd">        | *pverbs* (bool) -- if True, find and add verb phrases</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">result_fname</span><span class="p">))</span>  <span class="c1"># cd into parent dir</span>
+    <span class="k">for</span> <span class="n">outfile</span> <span class="ow">in</span> <span class="n">senna</span><span class="o">.</span><span class="n">get_output_files</span><span class="p">():</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">fdata</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="c1"># removing whitespace from OUTPUT_FILE data</span>
+        <span class="n">cdata</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">r&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fdata</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="c1"># iterating through sentences extracted from OUTPUT_FILE</span>
+        <span class="n">sent_cnt</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">abs_sent_cnt</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">sent_chunk</span> <span class="ow">in</span> <span class="n">cdata</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">sent_chunk</span><span class="p">:</span> <span class="k">break</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">tuple</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">))</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span>
+                           <span class="n">sent_chunk</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)])</span>
+            <span class="c1"># creating word tuples for xml insertion</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                <span class="c1"># in case ukwac and SENNA splitting difference</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">lemmas</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="n">lemmas</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="sd">&quot;&quot;&quot;We received lemmas dict from extract_ukwac_columns() and now</span>
+<span class="sd">                get lemmas from it and replacing the original words&quot;&quot;&quot;</span>
+            <span class="n">sent</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">lemmas</span><span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]]),</span> <span class="n">t</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
+            <span class="n">rawsent</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">])</span>  <span class="c1"># for Ottokar</span>
+            <span class="n">rawsent_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rawsent</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="c1"># we need a new index because SENNA may split some sents in two</span>
+            <span class="k">if</span> <span class="n">sent</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;``/``&#39;</span><span class="p">:</span>
+                <span class="n">abs_sent_cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">sent</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span> <span class="k">continue</span>
+            <span class="c1"># creating sentence xml representation</span>
+            <span class="c1"># inserting text_ids</span>
+            <span class="k">if</span> <span class="n">id_idx</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">sent_cnt</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">textid</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;text&quot;</span><span class="p">)</span>
+                    <span class="n">textid</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">id_idx</span><span class="p">)))</span>
+                    <span class="n">UkwacTools</span><span class="o">.</span><span class="n">append_to_xml</span><span class="p">(</span><span class="n">result_fname</span><span class="p">,</span> <span class="n">textid</span><span class="p">)</span>
+                    <span class="n">sent_cnt</span> <span class="o">-=</span> <span class="n">id_idx</span><span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">id_idx</span><span class="p">))]</span>
+                    <span class="n">id_idx</span><span class="o">.</span><span class="n">popitem</span><span class="p">(</span><span class="n">last</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">)</span>
+            <span class="n">malt</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="s2">&quot;malt&quot;</span><span class="p">)</span>
+            <span class="c1"># sent_text = et.SubElement(root, &quot;sent&quot;)</span>
+            <span class="n">rawsent_text</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="s2">&quot;rawsent&quot;</span><span class="p">)</span>
+            <span class="n">lemmsent_text</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="s2">&quot;lemsent&quot;</span><span class="p">)</span>
+            <span class="c1"># sent_text.text = &#39; &#39;.join([i[0].rsplit(&#39;/&#39;, 1)[0]</span>
+            <span class="c1">#                           for i in sent]).lower()</span>
+            <span class="c1"># for Ottokar, remove the line below and uncomment the line above</span>
+            <span class="n">rawsent_text</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">rawsent</span>
+            <span class="n">lemmsent_text</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                                           <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sent</span><span class="p">])</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">malt</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span>  <span class="n">malt_data</span><span class="p">[</span><span class="n">abs_sent_cnt</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="c1"># merge XP+POS into POS, if POS detected in the argument</span>
+            <span class="k">if</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">r&#39;.*/POS$&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">sent</span><span class="p">):</span>
+                <span class="n">sent</span> <span class="o">=</span> <span class="n">UkwacTools</span><span class="o">.</span><span class="n">merge_POS</span><span class="p">(</span><span class="n">sent</span><span class="p">)</span>
+            <span class="c1"># adding position index for words</span>
+            <span class="n">sent</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">])]),</span>
+                     <span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sent</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="c1"># check if rawsent idx and senna idx are the same</span>
+            <span class="n">equal</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">izip</span><span class="p">(</span><span class="n">rawsent_idx</span><span class="p">,</span> <span class="n">sent</span><span class="p">):</span>
+                <span class="n">idx0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">idx1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">2</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">idx0</span> <span class="o">!=</span> <span class="n">idx1</span><span class="p">:</span>
+                    <span class="n">equal</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">equal</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="c1"># retrieving and creating governor nodes</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">governor</span> <span class="ow">in</span> <span class="n">UkwacTools</span><span class="o">.</span><span class="n">get_governors</span><span class="p">(</span><span class="n">sent</span><span class="p">,</span> <span class="n">sent_chunk</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">governor</span><span class="p">:</span> <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span> <span class="k">continue</span>  <span class="c1"># skipping non-gov columns</span>
+                <span class="n">pred</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="s2">&quot;predicate&quot;</span><span class="p">)</span>
+                <span class="n">gov</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="s2">&quot;governor&quot;</span><span class="p">)</span>
+                <span class="n">gov</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">governor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">deps</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="s2">&quot;dependencies&quot;</span><span class="p">)</span>
+                <span class="n">dep_dic</span> <span class="o">=</span> <span class="n">UkwacTools</span><span class="o">.</span><span class="n">get_dependants</span><span class="p">(</span><span class="n">sent</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">sent_chunk</span><span class="p">)</span>
+                <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dep_dic</span><span class="p">:</span>
+                    <span class="n">dep</span> <span class="o">=</span> <span class="n">et</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">deps</span><span class="p">,</span> <span class="s2">&quot;dep&quot;</span><span class="p">)</span>
+                    <span class="n">dep</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">dep</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="c1"># add vps if set</span>
+            <span class="k">if</span> <span class="n">pverbs</span><span class="p">:</span>
+                <span class="n">root</span> <span class="o">=</span> <span class="n">UkwacTools</span><span class="o">.</span><span class="n">add_vps</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+
+            <span class="c1"># appending formatted xml to the file</span>
+            <span class="n">UkwacTools</span><span class="o">.</span><span class="n">append_to_xml</span><span class="p">(</span><span class="n">result_fname</span><span class="p">,</span> <span class="n">root</span><span class="p">)</span>
+            <span class="n">sent_cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">UkwacTools</span><span class="o">.</span><span class="n">gzip_xml</span><span class="p">(</span><span class="n">result_fname</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ukwac_convert"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.ukwac_convert">[docs]</a><span class="k">def</span> <span class="nf">ukwac_convert</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main function.</span>
+<span class="sd">    Call methods required for ukwac corpus conversion into xml representation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        *args* (dict) -- parsed arguments specified at command line</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># collect and redefine user specified args</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sge_id</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%04d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SGE_TASK_ID&#39;</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="p">,</span>
+                                <span class="s1">&#39;ukwac.fixed-nowiki.node&#39;</span> <span class="o">+</span> <span class="n">sge_id</span> <span class="o">+</span> <span class="s1">&#39;.gz&#39;</span><span class="p">)</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">file</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="p">:</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: Please provide input dir or input file name.&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Output directory already exists!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Start ukwac conversion</span>
+    <span class="n">isqsub</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">qsub</span>
+    <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+        <span class="n">ukwac_fname_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">ukwac_fname</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">)),</span>
+                                <span class="s1">&#39;converted.xml&#39;</span><span class="p">])</span>
+        <span class="n">out_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">senna</span><span class="o">.</span><span class="n">runpath</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">)</span>
+        <span class="n">grid_senna_in</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">ukwac_fname</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">)),</span>
+                                  <span class="s1">&#39;input&#39;</span><span class="p">])</span>
+        <span class="n">grid_senna_out</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">ukwac_fname</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">)),</span>
+                                   <span class="s1">&#39;output&#39;</span><span class="p">])</span>
+        <span class="nb">print</span> <span class="s1">&#39;reading </span><span class="si">%s</span><span class="s1">...&#39;</span> <span class="o">%</span> <span class="n">filename</span>
+        <span class="n">fdata</span> <span class="o">=</span> <span class="n">UkwacTools</span><span class="o">.</span><span class="n">gzip_reader</span><span class="p">(</span><span class="n">ukwac_fname_path</span><span class="p">)</span>
+        <span class="nb">print</span> <span class="s1">&#39;extracting sentences...&#39;</span>
+        <span class="n">sents</span><span class="p">,</span> <span class="n">word_lemma</span><span class="p">,</span> <span class="n">id_index</span><span class="p">,</span> <span class="n">malt_dic</span> <span class="o">=</span> <span class="n">extract_ukwac_data</span><span class="p">(</span><span class="n">fdata</span><span class="p">)</span>
+        <span class="c1"># Prepare remote environment and assign paths for qsub machines</span>
+        <span class="k">if</span> <span class="n">isqsub</span><span class="p">:</span>
+            <span class="c1"># WARNING: hardcoded stuff</span>
+            <span class="c1"># will contain temporary files</span>
+            <span class="n">forbin_local</span> <span class="o">=</span> <span class="s1">&#39;/local/pavels&#39;</span>
+            <span class="c1"># original senna dir</span>
+            <span class="n">senna_proj_dir</span> <span class="o">=</span> <span class="s1">&#39;/proj/rollenwechsel.shadow/senna&#39;</span>
+            <span class="c1"># local senna dir on qsub machine</span>
+            <span class="n">senna_qsub_dir</span> <span class="o">=</span> <span class="s1">&#39;/local/pavels/senna&#39;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">forbin_local</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">forbin_local</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">senna_qsub_dir</span><span class="p">):</span>
+                <span class="c1"># copy complete senna dir to remote machine if not exist</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">senna_proj_dir</span><span class="p">,</span> <span class="n">senna_qsub_dir</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">forbin_local</span><span class="p">)</span>
+            <span class="n">senna</span><span class="o">.</span><span class="n">runpath</span> <span class="o">=</span> <span class="n">forbin_local</span>
+        <span class="n">result_fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">ukwac_fname</span><span class="p">)</span>
+        <span class="n">senna</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">sents</span><span class="p">,</span> <span class="n">grid_senna_in</span><span class="p">,</span> <span class="n">grid_senna_out</span><span class="p">)</span>
+        <span class="nb">print</span> <span class="s1">&#39;creating xml...&#39;</span>
+        <span class="n">build_xml</span><span class="p">(</span><span class="n">word_lemma</span><span class="p">,</span> <span class="n">id_index</span><span class="p">,</span> <span class="n">result_fname</span><span class="p">,</span> <span class="n">malt_dic</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">pverbs</span><span class="p">)</span>
+        <span class="nb">print</span> <span class="s1">&#39;cleaning...&#39;</span>
+        <span class="n">senna</span><span class="o">.</span><span class="n">clean_up</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">grid_senna_in</span><span class="p">,</span> <span class="n">grid_senna_out</span><span class="p">,</span> <span class="n">result_fname</span><span class="p">)</span>
+        <span class="nb">print</span> <span class="s1">&#39;done</span><span class="se">\n</span><span class="s1">&#39;</span></div>
+
+
+<div class="viewcode-block" id="get_contractions"><a class="viewcode-back" href="../../ukwac2tensor.html#ukwac2tensor.ukwac_converter.get_contractions">[docs]</a><span class="k">def</span> <span class="nf">get_contractions</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Return special contractions dict.&quot;&quot;&quot;</span>
+    <span class="n">contr</span> <span class="o">=</span> <span class="p">{</span>
+             <span class="s2">&quot;Are n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Are not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;are n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;are not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Ca n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Cannot&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;ca n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;cannot&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;could &#39;ve&quot;</span><span class="p">:</span> <span class="s2">&quot;could have&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Could n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Could not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;could n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;could not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;could n&#39;t &#39;ve&quot;</span><span class="p">:</span> <span class="s2">&quot;could not have&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Did n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Did not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;did n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;did not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Does n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Does not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;does n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;does not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Do n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Do not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;do n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;do not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Had n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Had not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;had n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;had not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;had n&#39;t &#39;ve&quot;</span><span class="p">:</span> <span class="s2">&quot;had not have&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Has n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Has not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;has n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;has not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Have n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Have not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;have n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;have not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;he&#39;d &#39;ve&quot;</span><span class="p">:</span> <span class="s2">&quot;he would have&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Is n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Is not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;is n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;is not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Let &#39;s&quot;</span><span class="p">:</span> <span class="s2">&quot;Let us&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;let &#39;s&quot;</span><span class="p">:</span> <span class="s2">&quot;let us&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;might n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;might not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;might n&#39;t &#39;ve&quot;</span><span class="p">:</span> <span class="s2">&quot;might not have&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;might &#39;ve&quot;</span><span class="p">:</span> <span class="s2">&quot;might have&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Must n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Must not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;must n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;must not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;must &#39;ve&quot;</span><span class="p">:</span> <span class="s2">&quot;must have&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;need n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;need not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Sha n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Shall not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;sha n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;shall not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Should n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Should not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;should n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;should not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;should n&#39;t &#39;ve&quot;</span><span class="p">:</span> <span class="s2">&quot;should not have&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Was n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Was not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;was n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;was not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Were n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Were not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;were n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;were not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Wo n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Will not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;wo n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;will not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;Would n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;Would not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;would n&#39;t&quot;</span><span class="p">:</span> <span class="s2">&quot;would not&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;we &#39;ll&quot;</span><span class="p">:</span> <span class="s2">&quot;we will&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;We &#39;ll&quot;</span><span class="p">:</span> <span class="s2">&quot;We will&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;we &#39;ve&quot;</span><span class="p">:</span> <span class="s2">&quot;we have&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;We &#39;ve&quot;</span><span class="p">:</span> <span class="s2">&quot;We have&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;You &#39;ll&quot;</span><span class="p">:</span> <span class="s2">&quot;You will&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;you &#39;ll&quot;</span><span class="p">:</span> <span class="s2">&quot;you shall&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;You &#39;ve&quot;</span><span class="p">:</span> <span class="s2">&quot;you have&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;you &#39;ve&quot;</span><span class="p">:</span> <span class="s2">&quot;you have&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;I &#39;ve&quot;</span><span class="p">:</span> <span class="s2">&quot;I have&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;He &#39;ll&quot;</span><span class="p">:</span> <span class="s2">&quot;He will&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;he &#39;ll&quot;</span><span class="p">:</span> <span class="s2">&quot;he will&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;She &#39;ll&quot;</span><span class="p">:</span> <span class="s2">&quot;She will&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;she &#39;ll&quot;</span><span class="p">:</span> <span class="s2">&quot;she will&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;I &#39;ll&quot;</span><span class="p">:</span> <span class="s2">&quot;I shall&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;it &#39;ll&quot;</span><span class="p">:</span> <span class="s2">&quot;it will&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;It &#39;ll&quot;</span><span class="p">:</span> <span class="s2">&quot;It will&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;they &#39;ll&quot;</span><span class="p">:</span> <span class="s2">&quot;they will&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;They &#39;ll&quot;</span><span class="p">:</span> <span class="s2">&quot;They will&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;I &#39;m&quot;</span><span class="p">:</span> <span class="s2">&quot;I am&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;would n&#39;t &#39;ve&quot;</span><span class="p">:</span> <span class="s2">&quot;would not have&quot;</span><span class="p">,</span>
+             <span class="s2">&quot; &#39;&quot;</span><span class="p">:</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;&lt;s&gt;&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;&lt;/s&gt;&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+             <span class="p">}</span>
+    <span class="k">return</span> <span class="n">od</span><span class="p">(</span><span class="n">contr</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">prs</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    This script converts ukwac corpus to xml using SENNA role labeler as a</span>
+<span class="s2">    sentence parser.</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">prs</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="s1">&#39;--dir&#39;</span><span class="p">,</span>
+                     <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Specify directory where ukwac files are located.&#39;</span><span class="p">,</span>
+                     <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">prs</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="s1">&#39;--file&#39;</span><span class="p">,</span>
+                     <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Specify ukwac file to process. If not specified &#39;</span>
+                          <span class="s1">&#39;default &quot;ukwac.fixed-nowiki.node</span><span class="si">{SGE_TASK_ID}</span><span class="s1">.gz&quot; &#39;</span>
+                          <span class="s1">&#39;is used.&#39;</span><span class="p">,</span>
+                     <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">prs</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="s1">&#39;--bin&#39;</span><span class="p">,</span>
+                     <span class="n">default</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;senna&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;senna-linux64&#39;</span><span class="p">),</span>
+                     <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Specify full path to SENNA dir. If not &#39;</span>
+                          <span class="s1">&#39;specified current directory + /senna is used. &#39;</span>
+                          <span class="s1">&#39;This option won</span><span class="se">\&#39;</span><span class="s1">t work with -qs option.&#39;</span><span class="p">,</span>
+                     <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">prs</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="s1">&#39;--out&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span>
+                     <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Specify output directory. If not specified current &#39;</span>
+                          <span class="s1">&#39;dir is used.&#39;</span><span class="p">,</span>
+                     <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">prs</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-qs&#39;</span><span class="p">,</span> <span class="s1">&#39;--qsub&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+                     <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Use this option if you run the script on forbin&#39;</span>
+                          <span class="s1">&#39; with qsub. The script will copy the required files&#39;</span>
+                          <span class="s1">&#39; under its /local instance dir and copy the results&#39;</span>
+                          <span class="s1">&#39; to /local/pavels.&#39;</span><span class="p">,</span>
+                     <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">prs</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-pv&#39;</span><span class="p">,</span> <span class="s1">&#39;--pverbs&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+                     <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Specify this option if you want to switch phrasal&#39;</span>
+                          <span class="s1">&#39;verbs search and to include them into the results.&#39;</span><span class="p">,</span>
+                     <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">prs</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-missing&#39;</span><span class="p">,</span> <span class="s1">&#39;--missing&#39;</span><span class="p">,</span>
+                     <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Specify the directory with the files converted &#39;</span> <span class="o">+</span>
+                     <span class="s1">&#39;by ukwac_converter.py to check for any missed files.&#39;</span><span class="p">,</span>
+                     <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">prs</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">missing</span><span class="p">:</span>
+        <span class="n">detect_missing_files</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">missing</span><span class="p">)</span>
+        <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">senna</span> <span class="o">=</span> <span class="n">SENNA</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">bin</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">qsub</span><span class="p">)</span>
+    <span class="n">ukwac_convert</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="c1">### uncomment to generate script execution .png graph</span>
+    <span class="c1"># graphviz = GraphvizOutput()</span>
+    <span class="c1"># graphviz.output_file = &#39;ukwac.png&#39;</span>
+    <span class="c1"># with PyCallGraph(output=graphviz):</span>
+    <span class="c1">#    ukwac_convert(args)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, tastyminerals.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

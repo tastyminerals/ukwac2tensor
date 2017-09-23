@@ -1,0 +1,65 @@
+<!-- Testing contractions and normalization of extract_ukwac_columns function. -->
+<!-- This file contains only the output for the test, the input comes from ukwac_converter_tests_input.xml. -->
+<!-- IMPORTANT! Last sentence in this file must contain single whitespace before line end CRLF (some weirdness I didn't bother to fix) -->
+<!--OUTPUT-->
+<test>
+<result> Does not the term suggest something like " mental pictures " ?
+``
+  " Cannot you ever think about anything but correcting grammar ? "
+``
+  Are not they lovely ? "
+``
+  Could not they see how it had to be nourished ?
+``
+  " Did not I live just now ? "
+``
+  So for all you Seles fans , let us just get this sorted out once and for all .
+``
+  Let us talk about something more sisterly .
+``
+  I need not have worried .
+``
+  You might not think it but it would be nice to feel proud of where you come from .
+``
+  He must have broken the other arm because the next day he had both arms in plaster .
+``
+  You must not mind what kids say .
+``
+  She need not have wondered .
+``
+  Why should not he just be getting old ?
+``
+  It was not the first such attack .
+``
+  I would not take an egg from the village folk .
+``
+  " You were not with anyone in the kitchen .
+``
+  But PowerGen and National Power will not like it .
+``
+  For sure he takes pains to make Tikhon a human puzzle so that he shall not in any obvious way speak God's truth .
+``
+  They will be with you again in a day or two , if you do not hold us up .
+``
+  " Darling , " he boomed , " you have no idea how much I have missed you . "
+``
+  I have been asked to write about it and I said I'd give it a think . "
+``
+  I'd meet up with the others again on top and we'd descend together .
+``
+  He'd been up since six trying to fix his motorbike .
+``
+  The catalogue of the earlier Italian schools was written by Martin Davies , and published in 1951. the strength of the gallery's holding of works by Giovanni Bellini made it worth the author's while to write a preliminary note about difficulties of attribution :
+``
+  Is it Tuesday between eleven o'clock and noon ?
+``
+  The award winning Cross Court range now features a Girls Ultra Lo TP and Girls Ultra Cross NP TP in size 1 , 2 and 2 -- priced at 37.60 and 33.84 respectively .
+``
+  ( a ) references to signatures , inscription and dates refer to the present state of the work ; ( b ) the term " bears a signature " and/ or " date " and/ or " inscription " means that in our opinion the artist's name and/ or " date " and/ or inscription have been added by another hand ; ( c ) the term " signed " and/ or " dated " and/ or " inscribed " means that in our opinion the signature and/ or date and/ or inscription are from the hand of the artist .
+``
+  You will find more details of our training options on our web site .
+``
+  I think I would have said well ok then I shall have the hour for the PA to take me for a Caffe Latte at the supermarket cafe so I can socialise ! 
+``
+</result>
+</test>
